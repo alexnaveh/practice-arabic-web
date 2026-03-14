@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -9,6 +10,15 @@ import models
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# --- CORS ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Request schema ---
 class LoginRequest(BaseModel):
