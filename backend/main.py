@@ -71,3 +71,16 @@ def add_word(request: AddWordRequest, db: Session = Depends(get_db), current_use
     db.commit()
     db.refresh(word)
     return {"word_id": word.word_id, "word_arabic": word.word_arabic, "word_hebrew": word.word_hebrew, "description": word.description}
+
+@app.get("/words")
+def get_words(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    words = db.query(models.Word).filter(models.Word.user_id == current_user.user_id).all()
+    return [
+        {
+            "word_id": word.word_id,
+            "word_arabic": word.word_arabic,
+            "word_hebrew": word.word_hebrew,
+            "description": word.description
+        }
+        for word in words
+    ]
