@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 
 from database import engine, get_db
-from auth import create_access_token
+from auth import create_access_token, decode_access_token
 import models
 
 models.Base.metadata.create_all(bind=engine)
@@ -20,9 +21,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Request schema ---
+# --- Helper: get current user from token ---
+def get_current_user(authorization: str = Header(...), db: Session = Depends(get_db)):
+    token = authorization.replace("Bearer ", "")
+    user_id = decode_access_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+# --- Request schemas ---
 class LoginRequest(BaseModel):
     username: str
+
+class AddWordRequest(BaseModel):
+    word_arabic: str
+    word_hebrew: str
+    description: Optional[str] = None
 
 # --- Routes ---
 @app.get("/")
@@ -41,3 +58,16 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 
     token = create_access_token(int(user.user_id))
     return {"access_token": token, "token_type": "bearer"}
+
+@app.post("/words")
+def add_word(request: AddWordRequest, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    word = models.Word(
+        user_id=current_user.user_id,
+        word_arabic=request.word_arabic,
+        word_hebrew=request.word_hebrew,
+        description=request.description
+    )
+    db.add(word)
+    db.commit()
+    db.refresh(word)
+    return {"word_id": word.word_id, "word_arabic": word.word_arabic, "word_hebrew": word.word_hebrew, "description": word.description}
