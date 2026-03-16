@@ -41,3 +41,35 @@ export async function getWords() {
   if (!response.ok) throw new Error("Failed to fetch words");
   return response.json();
 }
+
+export async function editWord(wordId, wordArabic, wordHebrew, description) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`/api/words/${wordId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      word_arabic: wordArabic,
+      word_hebrew: wordHebrew,
+      description: description || null,
+    }),
+  });
+
+  if (!response.ok) throw new Error("Failed to edit word");
+  return response.json();
+}
+
+export async function deleteWord(wordId) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`/api/words/${wordId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) throw new Error("Failed to delete word");
+  return response.json();
+}

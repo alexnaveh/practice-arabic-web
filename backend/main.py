@@ -84,3 +84,24 @@ def get_words(db: Session = Depends(get_db), current_user: models.User = Depends
         }
         for word in words
     ]
+
+@app.put("/words/{word_id}")
+def edit_word(word_id: int, request: AddWordRequest, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    word = db.query(models.Word).filter(models.Word.word_id == word_id, models.Word.user_id == current_user.user_id).first()
+    if not word:
+        raise HTTPException(status_code=404, detail="Word not found")
+    word.word_arabic = request.word_arabic
+    word.word_hebrew = request.word_hebrew
+    word.description = request.description
+    db.commit()
+    db.refresh(word)
+    return {"word_id": word.word_id, "word_arabic": word.word_arabic, "word_hebrew": word.word_hebrew, "description": word.description}
+
+@app.delete("/words/{word_id}")
+def delete_word(word_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    word = db.query(models.Word).filter(models.Word.word_id == word_id, models.Word.user_id == current_user.user_id).first()
+    if not word:
+        raise HTTPException(status_code=404, detail="Word not found")
+    db.delete(word)
+    db.commit()
+    return {"message": "Word deleted"}

@@ -1,15 +1,28 @@
 import { useState, useEffect } from "react";
-import { addWord, getWords } from "../api";
+import { addWord, getWords, editWord, deleteWord } from "../api";
 
 export default function HomePage() {
+  const [words, setWords] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
+
+  // Modal state
   const [showModal, setShowModal] = useState(false);
+  const [editingWord, setEditingWord] = useState(null); // null = add mode, word object = edit mode
   const [arabic, setArabic] = useState("");
   const [hebrew, setHebrew] = useState("");
   const [description, setDescription] = useState("");
+
+  // Delete confirmation state
+  const [confirmDelete, setConfirmDelete] = useState(null); // null or word object
+
   const [toast, setToast] = useState(null);
-  const [words, setWords] = useState([]);
 
   useEffect(() => { getWords().then(setWords).catch(console.error); }, []);
+
+  function showToast(message, isError = false) {
+    setToast({ message, isError });
+    setTimeout(() => setToast(null), 3000);
+  }
 
   function handleClear() {
     setArabic("");
@@ -20,26 +33,60 @@ export default function HomePage() {
   function handleClose() {
     handleClear();
     setShowModal(false);
+    setEditingWord(null);
   }
 
-  function showToast(message, isError = false) {
-    setToast({ message, isError });
-    setTimeout(() => setToast(null), 3000);
+  function openAddModal() {
+    setEditingWord(null);
+    handleClear();
+    setShowModal(true);
   }
 
-  async function handleAdd() {
+  function openEditModal(word) {
+    setEditingWord(word);
+    setArabic(word.word_arabic);
+    setHebrew(word.word_hebrew);
+    setDescription(word.description || "");
+    setShowModal(true);
+  }
+
+  async function handleSubmit() {
     if (!arabic.trim() || !hebrew.trim()) {
       showToast("Arabic and Hebrew fields are required.", true);
       return;
     }
     try {
-      const newWord = await addWord(arabic.trim(), hebrew.trim(), description.trim());
-      setWords((prev) => [newWord, ...prev]);
+      if (editingWord) {
+        // Edit mode
+        const updated = await editWord(editingWord.word_id, arabic.trim(), hebrew.trim(), description.trim());
+        setWords((prev) => prev.map((w) => w.word_id === updated.word_id ? updated : w));
+        showToast("Word updated successfully! ✅");
+      } else {
+        // Add mode
+        const newWord = await addWord(arabic.trim(), hebrew.trim(), description.trim());
+        setWords((prev) => [newWord, ...prev]);
+        showToast("Word added successfully! ✅");
+      }
       handleClose();
-      showToast("Word added successfully! ✅");
     } catch (err) {
-      showToast("Failed to add word. Try again.", true);
+      showToast(editingWord ? "Failed to update word. Try again." : "Failed to add word. Try again.", true);
     }
+  }
+
+  async function handleDelete(word) {
+    try {
+      await deleteWord(word.word_id);
+      setWords((prev) => prev.filter((w) => w.word_id !== word.word_id));
+      setConfirmDelete(null);
+      setExpandedId(null);
+      showToast("Word deleted. 🗑️");
+    } catch (err) {
+      showToast("Failed to delete word. Try again.", true);
+    }
+  }
+
+  function toggleExpand(wordId) {
+    setExpandedId((prev) => (prev === wordId ? null : wordId));
   }
 
   return (
@@ -56,7 +103,7 @@ export default function HomePage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">My Words</h1>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={openAddModal}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
         >
           + Add a new word
@@ -69,25 +116,51 @@ export default function HomePage() {
       ) : (
         <ul className="space-y-3">
           {words.map((word) => (
-            <li key={word.word_id} className="bg-white rounded shadow p-4">
-              <div className="flex justify-between">
-                <span className="text-lg font-semibold">{word.word_arabic}</span>
-                <span className="text-gray-600">{word.word_hebrew}</span>
+            <li
+              key={word.word_id}
+              className="bg-white rounded shadow cursor-pointer"
+              onClick={() => toggleExpand(word.word_id)}
+            >
+              {/* Word info */}
+              <div className="p-4">
+                <div className="flex justify-between">
+                  <span className="text-lg font-semibold">{word.word_arabic}</span>
+                  <span className="text-gray-600">{word.word_hebrew}</span>
+                </div>
+                {word.description && (
+                  <p className="text-sm text-gray-400 mt-1">{word.description}</p>
+                )}
               </div>
-              {word.description && (
-                <p className="text-sm text-gray-400 mt-1">{word.description}</p>
+
+              {/* Expanded actions */}
+              {expandedId === word.word_id && (
+                <div className="flex border-t">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openEditModal(word); }}
+                    className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                  >
+                    Edit
+                  </button>
+                  <div className="w-px bg-gray-200" />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(word); }}
+                    className="flex-1 py-2 text-sm text-red-500 hover:bg-red-50 font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
               )}
             </li>
           ))}
         </ul>
       )}
 
-      {/* Modal */}
+      {/* Add / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Add a new word</h2>
+              <h2 className="text-lg font-bold">{editingWord ? "Edit word" : "Add a new word"}</h2>
               <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
             </div>
 
@@ -123,16 +196,42 @@ export default function HomePage() {
 
             <div className="flex gap-2 mt-5">
               <button
-                onClick={handleAdd}
+                onClick={handleSubmit}
                 className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm font-medium"
               >
-                ADD
+                {editingWord ? "SAVE" : "ADD"}
               </button>
               <button
                 onClick={handleClear}
                 className="flex-1 border py-2 rounded hover:bg-gray-50 text-sm text-gray-600"
               >
                 CLEAR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
+            <h2 className="text-lg font-bold mb-2">Delete word?</h2>
+            <p className="text-sm text-gray-500 mb-5">
+              Are you sure you want to delete <span className="font-semibold text-gray-700">{confirmDelete.word_arabic}</span> ({confirmDelete.word_hebrew})?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleDelete(confirmDelete)}
+                className="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 text-sm font-medium"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 border py-2 rounded hover:bg-gray-50 text-sm text-gray-600"
+              >
+                Cancel
               </button>
             </div>
           </div>
