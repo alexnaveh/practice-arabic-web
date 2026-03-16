@@ -7,10 +7,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  server: {
+    server: {
     proxy: {
       '/api': {
-        target: 'http://10.0.0.4:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
