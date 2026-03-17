@@ -136,7 +136,7 @@ export default function Navbar({ wordCount, onAddClick }) {
                     initial={{ x: -15, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: index * 0.05, duration: 0.2 }}
-                    className="flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer active:bg-gray-100"
+                    className="flex items-center gap-3 px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer active:bg-gray-100 border-b border-gray-100 last:border-b-0"
                     onClick={handleTitleAreaClick}
                   >
                     <span>{item.icon}</span>
