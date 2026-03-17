@@ -105,9 +105,9 @@ export default function HomePage() {
         <span className="text-sm text-gray-400">{words.length} words</span>
         <button
             onClick={openAddModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
         >
-            + Add a new word
+            + Add Word
         </button>
       </div>
 
