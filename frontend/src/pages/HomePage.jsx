@@ -8,13 +8,13 @@ export default function HomePage() {
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
-  const [editingWord, setEditingWord] = useState(null); // null = add mode, word object = edit mode
+  const [editingWord, setEditingWord] = useState(null);
   const [arabic, setArabic] = useState("");
   const [hebrew, setHebrew] = useState("");
   const [description, setDescription] = useState("");
 
   // Delete confirmation state
-  const [confirmDelete, setConfirmDelete] = useState(null); // null or word object
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const [toast, setToast] = useState(null);
 
@@ -58,12 +58,10 @@ export default function HomePage() {
     }
     try {
       if (editingWord) {
-        // Edit mode
         const updated = await editWord(editingWord.word_id, arabic.trim(), hebrew.trim(), description.trim());
         setWords((prev) => prev.map((w) => w.word_id === updated.word_id ? updated : w));
         showToast("Word updated successfully! ✅");
       } else {
-        // Add mode
         const newWord = await addWord(arabic.trim(), hebrew.trim(), description.trim());
         setWords((prev) => [newWord, ...prev]);
         showToast("Word added successfully! ✅");
@@ -91,83 +89,87 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50">
 
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
+      {/* ── Sticky Navbar ── */}
+      <nav className="fixed top-0 left-0 right-0 z-30 bg-white shadow-md border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-4 max-w-lg mx-auto">
+          <h1 className="text-lg font-bold text-gray-800">Word Arsenal</h1>
+          <span className="text-xs text-gray-400 font-medium">{words.length} words</span>
+          <button
+            onClick={openAddModal}
+            className="bg-green-600 text-white px-3 py-1.5 rounded-full hover:bg-green-700 text-sm font-medium"
+          >
+            + New Word
+          </button>
+        </div>
+      </nav>
+
+      {/* ── Page content — padded so list starts below navbar ── */}
+      <div className="pt-16 px-4 pb-6 max-w-lg mx-auto">
+
+        {/* Toast */}
+        <AnimatePresence>
+          {toast && (
             <motion.div
-            key="toast"
-            initial={{ x: "-100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "150%", opacity: 0 }}
-            transition={{
+              key="toast"
+              initial={{ x: "-100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "150%", opacity: 0 }}
+              transition={{
                 enter: { type: "spring", stiffness: 300, damping: 25 },
                 exit: { type: "tween", ease: "easeIn", duration: 0.25 }
-            }}
-            className={`fixed top-4 left-4 px-4 py-2 rounded shadow text-sm z-50 bg-white border-l-4 ${toast.isError ? "border-red-500 text-red-700" : "border-green-500 text-green-700"}`}
+              }}
+              className={`fixed top-4 left-4 px-4 py-2 rounded shadow text-sm z-50 bg-white border-l-4 ${toast.isError ? "border-red-500 text-red-700" : "border-green-500 text-green-700"}`}
             >
-            {toast.message}
+              {toast.message}
             </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Word Arsenal</h1>
-        <span className="text-sm text-gray-400">{words.length} words</span>
-        <button
-            onClick={openAddModal}
-            className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 text-sm"
-        >
-            New Word
-        </button>
-      </div>
-
-      {/* Word list */}
-      {words.length === 0 ? (
-        <p className="text-gray-400 text-center mt-20">No words yet. Add your first one!</p>
-      ) : (
-        <ul className="space-y-3">
-          {words.map((word) => (
-            <li
-              key={word.word_id}
-              className="bg-white rounded shadow cursor-pointer"
-              onClick={() => toggleExpand(word.word_id)}
-            >
-              {/* Word info */}
-              <div className="p-4">
-                <div className="flex justify-between">
-                  <span className="text-lg font-semibold">{word.word_arabic}</span>
-                  <span className="text-gray-600">{word.word_hebrew}</span>
+        {/* Word list */}
+        {words.length === 0 ? (
+          <p className="text-gray-400 text-center mt-20">No words yet. Add your first one!</p>
+        ) : (
+          <ul className="space-y-3 mt-4">
+            {words.map((word) => (
+              <li
+                key={word.word_id}
+                className="bg-white rounded shadow cursor-pointer"
+                onClick={() => toggleExpand(word.word_id)}
+              >
+                <div className="p-4">
+                  <div className="flex justify-between">
+                    <span className="text-lg font-semibold">{word.word_arabic}</span>
+                    <span className="text-gray-600">{word.word_hebrew}</span>
+                  </div>
+                  {word.description && (
+                    <p className="text-sm text-gray-400 mt-1">{word.description}</p>
+                  )}
                 </div>
-                {word.description && (
-                  <p className="text-sm text-gray-400 mt-1">{word.description}</p>
+
+                {expandedId === word.word_id && (
+                  <div className="flex border-t">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openEditModal(word); }}
+                      className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                    >
+                      Edit
+                    </button>
+                    <div className="w-px bg-gray-200" />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelete(word); }}
+                      className="flex-1 py-2 text-sm text-red-500 hover:bg-red-50 font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 )}
-              </div>
-
-              {/* Expanded actions */}
-              {expandedId === word.word_id && (
-                <div className="flex border-t">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openEditModal(word); }}
-                    className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
-                  >
-                    Edit
-                  </button>
-                  <div className="w-px bg-gray-200" />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(word); }}
-                    className="flex-1 py-2 text-sm text-red-500 hover:bg-red-50 font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Add / Edit Modal */}
       {showModal && (
