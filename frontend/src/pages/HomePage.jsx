@@ -102,11 +102,12 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">My Words</h1>
+        <span className="text-sm text-gray-400">{words.length} words</span>
         <button
-          onClick={openAddModal}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+            onClick={openAddModal}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
         >
-          + Add a new word
+            + Add a new word
         </button>
       </div>
 
