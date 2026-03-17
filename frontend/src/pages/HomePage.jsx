@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { addWord, getWords, editWord, deleteWord } from "../api";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 export default function HomePage() {
   const [words, setWords] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
+
+  const navigate = useNavigate();
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -52,6 +55,11 @@ export default function HomePage() {
     setShowModal(true);
   }
 
+  function handleLogout() {
+    localStorage.removeItem("token");
+    navigate("/login");
+  }
+
   async function handleSubmit() {
     if (!arabic.trim() || !hebrew.trim()) {
       showToast("Arabic and Hebrew fields are required.", true);
@@ -93,7 +101,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
 
       {/* ── Navbar ── */}
-      <Navbar wordCount={words.length} onAddClick={openAddModal} />
+      <Navbar wordCount={words.length} onAddClick={openAddModal} onLogout={handleLogout} />
 
       {/* ── Page content — padded so list starts below navbar ── */}
       <div className="pt-16 px-4 pb-6 max-w-lg mx-auto">
