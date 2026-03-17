@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { addWord, getWords, editWord, deleteWord } from "../api";
 import { AnimatePresence, motion } from "framer-motion";
+import Navbar from "../components/Navbar";
 
 export default function HomePage() {
   const [words, setWords] = useState([]);
@@ -91,19 +92,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* ── Sticky Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-30 bg-white shadow-md border-b border-gray-200">
-        <div className="flex items-center justify-between px-4 py-4 max-w-lg mx-auto">
-          <h1 className="text-lg font-bold text-gray-800">Word Arsenal</h1>
-          <span className="text-xs text-gray-400 font-medium">{words.length} words</span>
-          <button
-            onClick={openAddModal}
-            className="bg-green-600 text-white px-3 py-1.5 rounded-full hover:bg-green-700 text-sm font-medium"
-          >
-            + New Word
-          </button>
-        </div>
-      </nav>
+      {/* ── Navbar ── */}
+      <Navbar wordCount={words.length} onAddClick={openAddModal} />
 
       {/* ── Page content — padded so list starts below navbar ── */}
       <div className="pt-16 px-4 pb-6 max-w-lg mx-auto">
