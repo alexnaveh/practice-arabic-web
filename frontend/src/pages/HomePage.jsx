@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { addWord, getWords, editWord, deleteWord } from "../api";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function HomePage() {
   const [words, setWords] = useState([]);
@@ -21,7 +22,7 @@ export default function HomePage() {
 
   function showToast(message, isError = false) {
     setToast({ message, isError });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 1500);
   }
 
   function handleClear() {
@@ -93,21 +94,33 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50 p-6">
 
       {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded shadow text-white text-sm z-50 ${toast.isError ? "bg-red-500" : "bg-green-500"}`}>
-          {toast.message}
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+            <motion.div
+            key="toast"
+            initial={{ x: "-100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "150%", opacity: 0 }}
+            transition={{
+                enter: { type: "spring", stiffness: 300, damping: 25 },
+                exit: { type: "tween", ease: "easeIn", duration: 0.25 }
+            }}
+            className={`fixed top-4 left-4 px-4 py-2 rounded shadow text-sm z-50 bg-white border-l-4 ${toast.isError ? "border-red-500 text-red-700" : "border-green-500 text-green-700"}`}
+            >
+            {toast.message}
+            </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Words</h1>
+        <h1 className="text-2xl font-bold">Word Arsenal</h1>
         <span className="text-sm text-gray-400">{words.length} words</span>
         <button
             onClick={openAddModal}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+            className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 text-sm"
         >
-            + Add Word
+            New Word
         </button>
       </div>
 
@@ -171,8 +184,8 @@ export default function HomePage() {
                 <input
                   value={arabic}
                   onChange={(e) => setArabic(e.target.value)}
-                  className="w-full border rounded px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="e.g. سمكة"
+                  className="w-full placeholder:text-gray-300 border rounded px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="كلمة أو جملة"
                 />
               </div>
               <div>
@@ -180,8 +193,8 @@ export default function HomePage() {
                 <input
                   value={hebrew}
                   onChange={(e) => setHebrew(e.target.value)}
-                  className="w-full border rounded px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="e.g. דג"
+                  className="w-full placeholder:text-gray-300 border rounded px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="מילה או משפט"
                 />
               </div>
               <div>
@@ -189,8 +202,8 @@ export default function HomePage() {
                 <input
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full border rounded px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="e.g. חיה שחיה בים"
+                  className="w-full placeholder:text-gray-300 border rounded px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="insert an explanation or example"
                 />
               </div>
             </div>
