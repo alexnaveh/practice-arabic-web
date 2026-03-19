@@ -48,10 +48,11 @@ def read_root():
 
 @app.post("/users/login")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.username == request.username).first()
+    username = request.username.strip().lower()
+    user = db.query(models.User).filter(models.User.username == username).first()
 
     if not user:
-        user = models.User(username=request.username)
+        user = models.User(username=username)
         db.add(user)
         db.commit()
         db.refresh(user)
