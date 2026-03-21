@@ -1,9 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function Navbar({ wordCount, onAddClick, onLogout, onSelectionClick, isSelecting, selectedCount, onCancelSelection }) {
+export default function Navbar({
+  wordCount, onAddClick, onLogout, onSelectionClick,
+  isSelecting, selectedCount, onCancelSelection,
+  onSelectAll, onDeleteSelected, onAddToGroup, onNewGroup
+}) {
     const [phase, setPhase] = useState("title"); // "title" | "hamburger" | "menu"
     const [navHeight, setNavHeight] = useState(0);
+    const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
     const navRef = useRef(null);
 
     useEffect(() => {
@@ -15,6 +20,12 @@ export default function Navbar({ wordCount, onAddClick, onLogout, onSelectionCli
     useEffect(() => {
         if (isSelecting) {
             setPhase("hamburger");
+        }
+    }, [isSelecting]);
+
+    useEffect(() => {
+        if (!isSelecting) {
+            setSelectionMenuOpen(false);
         }
     }, [isSelecting]);
 
@@ -50,7 +61,7 @@ export default function Navbar({ wordCount, onAddClick, onLogout, onSelectionCli
             <div
                 className="relative cursor-pointer h-7 flex items-center"
                 style={{ minWidth: "140px" }}
-                onClick={!isSelecting ? handleTitleAreaClick : undefined}
+                onClick={isSelecting ? () => setSelectionMenuOpen((prev) => !prev) : handleTitleAreaClick}
             >
                 {/* Title */}
                 <AnimatePresence mode="wait">
@@ -178,6 +189,67 @@ export default function Navbar({ wordCount, onAddClick, onLogout, onSelectionCli
                 </motion.div>
             </>
             )}
+        </AnimatePresence>
+
+        {/* Selection mode dropdown */}
+        <AnimatePresence>
+        {isSelecting && selectionMenuOpen && (
+            <>
+            {/* Backdrop */}
+            <motion.div
+                key="selection-backdrop"
+                className="fixed inset-0 z-20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectionMenuOpen(false)}
+            />
+
+            {/* Dropdown */}
+            <motion.div
+                key="selection-dropdown"
+                className="fixed left-0 right-0 max-w-lg mx-auto z-20 bg-white border-b border-gray-200 shadow-md overflow-hidden"
+                style={{ top: navHeight }}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
+                <ul className="py-1">
+                {[
+                    { label: "Select All", icon: "☑️", action: onSelectAll },
+                    { label: "Delete", icon: "🗑️", action: onDeleteSelected },
+                    { label: "Add to Group", icon: "📋", action: onAddToGroup },
+                    { label: "New Group", icon: "✨", action: onNewGroup },
+                ].map((item, index) => {
+                    const isDisabled = item.label !== "Select All" && selectedCount === 0;
+                    return (
+                    <motion.li
+                        key={item.label}
+                        initial={{ x: -15, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: index * 0.05, duration: 0.2 }}
+                        className={`flex items-center gap-3 px-5 py-3 text-sm border-b border-gray-100 last:border-b-0 ${
+                        isDisabled
+                            ? "text-gray-300 cursor-not-allowed"
+                            : "text-gray-700 hover:bg-gray-50 cursor-pointer active:bg-gray-100"
+                        }`}
+                        onClick={() => {
+                        if (!isDisabled) {
+                            setSelectionMenuOpen(false);
+                            item.action?.();
+                        }
+                        }}
+                    >
+                        <span>{item.icon}</span>
+                        <span className="font-medium">{item.label}</span>
+                    </motion.li>
+                    );
+                })}
+                </ul>
+            </motion.div>
+            </>
+        )}
         </AnimatePresence>
         </>
     );

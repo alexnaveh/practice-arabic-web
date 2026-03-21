@@ -83,17 +83,40 @@ export default function HomePage() {
     }
   }
 
-  async function handleDelete(word) {
-    try {
-      await deleteWord(word.word_id);
-      setWords((prev) => prev.filter((w) => w.word_id !== word.word_id));
-      setConfirmDelete(null);
-      setExpandedId(null);
-      showToast("Word deleted. 🗑️");
-    } catch (err) {
-      showToast("Failed to delete word. Try again.", true);
+    async function handleDelete(word) {
+        try {
+        await deleteWord(word.word_id);
+        setWords((prev) => prev.filter((w) => w.word_id !== word.word_id));
+        setConfirmDelete(null);
+        setExpandedId(null);
+        showToast("Word deleted. 🗑️");
+        } catch (err) {
+        showToast("Failed to delete word. Try again.", true);
+        }
     }
-  }
+
+    function handleSelectAll() {
+        if (selectedIds.size === words.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(words.map((w) => w.word_id)));
+        }
+    }
+
+    function handleDeleteSelected() {
+        // Step 5 — coming soon
+        console.log("delete", [...selectedIds]);
+    }
+
+    function handleAddToGroup() {
+        // future feature
+        console.log("add to group", [...selectedIds]);
+    }
+
+    function handleNewGroup() {
+        // future feature
+        console.log("new group", [...selectedIds]);
+    }
 
     function toggleExpand(wordId) {
         setExpandedId((prev) => (prev === wordId ? null : wordId));
@@ -133,6 +156,10 @@ export default function HomePage() {
             onCancelSelection={handleCancelSelection}
             isSelecting={isSelecting}
             selectedCount={selectedIds.size}
+            onSelectAll={handleSelectAll}
+            onDeleteSelected={handleDeleteSelected}
+            onAddToGroup={handleAddToGroup}
+            onNewGroup={handleNewGroup}
         />
 
       {/* ── Page content — padded so list starts below navbar ── */}
