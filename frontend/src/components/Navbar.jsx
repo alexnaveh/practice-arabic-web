@@ -6,7 +6,7 @@ export default function Navbar({
   isSelecting, selectedCount, onCancelSelection,
   onSelectAll, onDeleteSelected, onAddToGroup, onNewGroup
 }) {
-    const [phase, setPhase] = useState("title"); // "title" | "hamburger" | "menu"
+    const [phase, setPhase] = useState("title"); // "title" | "menu"
     const [navHeight, setNavHeight] = useState(0);
     const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
     const navRef = useRef(null);
@@ -19,7 +19,7 @@ export default function Navbar({
 
     useEffect(() => {
         if (isSelecting) {
-            setPhase("hamburger");
+            setPhase("title");
         }
     }, [isSelecting]);
 
@@ -31,11 +31,9 @@ export default function Navbar({
 
     function handleTitleAreaClick() {
         if (phase === "title") {
-        setPhase("hamburger");
-        } else if (phase === "hamburger") {
-        setPhase("menu");
+            setPhase("menu");
         } else if (phase === "menu") {
-        setPhase("hamburger");
+            setPhase("title");
         }
     }
 
@@ -47,7 +45,6 @@ export default function Navbar({
     ];
 
     const titleExitDuration = 0.15;
-    const hamburgerDelay = 0.18;
 
     return (
         <>
@@ -57,7 +54,7 @@ export default function Navbar({
         >
             <div className="flex items-center justify-between px-4 py-4 max-w-lg mx-auto">
 
-            {/* Title / Hamburger toggle */}
+            {/* Title */}
             <div
                 className="relative cursor-pointer h-7 flex items-center"
                 style={{ minWidth: "140px" }}
@@ -65,7 +62,7 @@ export default function Navbar({
             >
                 {/* Title */}
                 <AnimatePresence mode="wait">
-                    {phase === "title" && !isSelecting && (
+                    {!isSelecting ? (
                         <motion.h1
                             key="title"
                             className="text-lg font-bold text-gray-800 absolute"
@@ -76,52 +73,18 @@ export default function Navbar({
                         >
                             Word Arsenal
                         </motion.h1>
-                    )}
-                </AnimatePresence>
-
-                {/* Hamburger */}
-                <AnimatePresence mode="wait">
-                    {(phase === "hamburger" || phase === "menu") && !isSelecting && (
-                        <motion.div
-                        key="hamburger"
-                        className="absolute flex flex-col justify-center gap-1.5"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: titleExitDuration }}
-                        >
-                        {[0, 1, 2].map((i) => (
+                    ) : (
                         <motion.span
-                        key={i}
-                        className="block h-0.5 bg-gray-800 rounded-full"
-                        initial={{ width: 0, x: -10 }}
-                        animate={{ width: 22, x: 0 }}
-                        exit={{ width: 0, x: -10 }}
-                        transition={{
-                            duration: 0.2,
-                            delay: hamburgerDelay + i * 0.08,
-                            ease: "easeOut",
-                        }}
-                        />
-                    ))}
-                    </motion.div>
-                )}
-                </AnimatePresence>
-
-                {/* Selection mode title */}
-                <AnimatePresence mode="wait">
-                {isSelecting && (
-                    <motion.span
-                    key="selecting"
-                    className="text-lg font-bold text-gray-800 absolute"
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    transition={{ duration: 0.15, ease: "easeInOut" }}
-                    >
-                    Word Selection
-                    </motion.span>
-                )}
+                            key="selecting"
+                            className="text-lg font-bold text-gray-800 absolute"
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -20, opacity: 0 }}
+                            transition={{ duration: 0.15, ease: "easeInOut" }}
+                        >
+                            Word Selection
+                        </motion.span>
+                    )}
                 </AnimatePresence>
             </div>
 
@@ -150,23 +113,23 @@ export default function Navbar({
             <>
                 {/* Backdrop */}
                 <motion.div
-                key="backdrop"
-                className="fixed inset-0 z-20"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={handleTitleAreaClick}
+                    key="backdrop"
+                    className="fixed inset-0 z-20"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={handleTitleAreaClick}
                 />
 
                 {/* Dropdown */}
                 <motion.div
-                key="dropdown"
-                className="fixed left-0 right-0 max-w-lg mx-auto z-20 bg-white border-b border-gray-200 shadow-md overflow-hidden"
-                style={{ top: navHeight }}
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
+                    key="dropdown"
+                    className="fixed left-0 right-0 max-w-lg mx-auto z-20 bg-white border-b border-gray-200 shadow-md overflow-hidden"
+                    style={{ top: navHeight }}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
                 >
                 <ul className="py-1">
                     {menuItems.map((item, index) => (
