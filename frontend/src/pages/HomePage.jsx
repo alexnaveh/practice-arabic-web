@@ -5,83 +5,84 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 export default function HomePage() {
-  const [words, setWords] = useState([]);
-  const [expandedId, setExpandedId] = useState(null);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState(new Set());
+    const [words, setWords] = useState([]);
+    const [expandedId, setExpandedId] = useState(null);
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
 
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  // Modal state
-  const [showModal, setShowModal] = useState(false);
-  const [editingWord, setEditingWord] = useState(null);
-  const [arabic, setArabic] = useState("");
-  const [hebrew, setHebrew] = useState("");
-  const [description, setDescription] = useState("");
+    // Modal state
+    const [showModal, setShowModal] = useState(false);
+    const [editingWord, setEditingWord] = useState(null);
+    const [arabic, setArabic] = useState("");
+    const [hebrew, setHebrew] = useState("");
+    const [description, setDescription] = useState("");
 
-  // Delete confirmation state
-  const [confirmDelete, setConfirmDelete] = useState(null);
+    // Delete confirmation state
+    const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const [toast, setToast] = useState(null);
+    const [toast, setToast] = useState(null);
 
-  useEffect(() => { getWords().then(setWords).catch(console.error); }, []);
+    useEffect(() => { getWords().then(setWords).catch(console.error); }, []);
 
-  function showToast(message, isError = false) {
-    setToast({ message, isError });
-    setTimeout(() => setToast(null), 1500);
-  }
-
-  function handleClear() {
-    setArabic("");
-    setHebrew("");
-    setDescription("");
-  }
-
-  function handleClose() {
-    handleClear();
-    setShowModal(false);
-    setEditingWord(null);
-  }
-
-  function openAddModal() {
-    setEditingWord(null);
-    handleClear();
-    setShowModal(true);
-  }
-
-  function openEditModal(word) {
-    setEditingWord(word);
-    setArabic(word.word_arabic);
-    setHebrew(word.word_hebrew);
-    setDescription(word.description || "");
-    setShowModal(true);
-  }
-
-  function handleLogout() {
-    localStorage.removeItem("token");
-    navigate("/login");
-  }
-
-  async function handleSubmit() {
-    if (!arabic.trim() || !hebrew.trim()) {
-      showToast("Arabic and Hebrew fields are required.", true);
-      return;
+    function showToast(message, isError = false) {
+        setToast({ message, isError });
+        setTimeout(() => setToast(null), 1500);
     }
-    try {
-      if (editingWord) {
-        const updated = await editWord(editingWord.word_id, arabic.trim(), hebrew.trim(), description.trim());
-        setWords((prev) => prev.map((w) => w.word_id === updated.word_id ? updated : w));
-        showToast("Word updated successfully! ✅");
-      } else {
-        const newWord = await addWord(arabic.trim(), hebrew.trim(), description.trim());
-        setWords((prev) => [newWord, ...prev]);
-        showToast("Word added successfully! ✅");
-      }
-      handleClose();
-    } catch (err) {
-      showToast(editingWord ? "Failed to update word. Try again." : "Failed to add word. Try again.", true);
+
+    function handleClear() {
+        setArabic("");
+        setHebrew("");
+        setDescription("");
     }
-  }
+
+    function handleClose() {
+        handleClear();
+        setShowModal(false);
+        setEditingWord(null);
+    }
+
+    function openAddModal() {
+        setEditingWord(null);
+        handleClear();
+        setShowModal(true);
+    }
+
+    function openEditModal(word) {
+        setEditingWord(word);
+        setArabic(word.word_arabic);
+        setHebrew(word.word_hebrew);
+        setDescription(word.description || "");
+        setShowModal(true);
+    }
+
+    function handleLogout() {
+        localStorage.removeItem("token");
+        navigate("/login");
+    }
+
+    async function handleSubmit() {
+        if (!arabic.trim() || !hebrew.trim()) {
+        showToast("Arabic and Hebrew fields are required.", true);
+        return;
+        }
+        try {
+        if (editingWord) {
+            const updated = await editWord(editingWord.word_id, arabic.trim(), hebrew.trim(), description.trim());
+            setWords((prev) => prev.map((w) => w.word_id === updated.word_id ? updated : w));
+            showToast("Word updated successfully! ✅");
+        } else {
+            const newWord = await addWord(arabic.trim(), hebrew.trim(), description.trim());
+            setWords((prev) => [newWord, ...prev]);
+            showToast("Word added successfully! ✅");
+        }
+        handleClose();
+        } catch (err) {
+        showToast(editingWord ? "Failed to update word. Try again." : "Failed to add word. Try again.", true);
+        }
+    }
 
     async function handleDelete(word) {
         try {
@@ -104,8 +105,19 @@ export default function HomePage() {
     }
 
     function handleDeleteSelected() {
-        // Step 5 — coming soon
-        console.log("delete", [...selectedIds]);
+        setConfirmDeleteSelected(true);
+    }
+
+    async function executeDeleteSelected() {
+        try {
+            await Promise.all([...selectedIds].map((id) => deleteWord(id)));
+            setWords((prev) => prev.filter((w) => !selectedIds.has(w.word_id)));
+            showToast(`${selectedIds.size} word${selectedIds.size > 1 ? "s" : ""} deleted. 🗑️`);
+            setConfirmDeleteSelected(false);
+            handleCancelSelection();
+        } catch (err) {
+            showToast("Failed to delete some words. Try again.", true);
+        }
     }
 
     function handleAddToGroup() {
@@ -300,31 +312,56 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Delete confirmation */}
-      {confirmDelete && (
+        {/* Delete confirmation */}
+        {confirmDelete && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
+            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
+                <h2 className="text-lg font-bold mb-2">Delete word?</h2>
+                <p className="text-sm text-gray-500 mb-5">
+                Are you sure you want to delete <span className="font-semibold text-gray-700">{confirmDelete.word_arabic}</span> ({confirmDelete.word_hebrew})?
+                </p>
+                <div className="flex gap-2">
+                <button
+                    onClick={() => handleDelete(confirmDelete)}
+                    className="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 text-sm font-medium"
+                >
+                    Delete
+                </button>
+                <button
+                    onClick={() => setConfirmDelete(null)}
+                    className="flex-1 border py-2 rounded hover:bg-gray-50 text-sm text-gray-600"
+                >
+                    Cancel
+                </button>
+                </div>
+            </div>
+            </div>
+        )}
+        {/* Multi-delete confirmation */}
+        {confirmDeleteSelected && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
-            <h2 className="text-lg font-bold mb-2">Delete word?</h2>
+            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
+            <h2 className="text-lg font-bold mb-2">Delete {selectedIds.size} word{selectedIds.size > 1 ? "s" : ""}?</h2>
             <p className="text-sm text-gray-500 mb-5">
-              Are you sure you want to delete <span className="font-semibold text-gray-700">{confirmDelete.word_arabic}</span> ({confirmDelete.word_hebrew})?
+                This will permanently delete {selectedIds.size} selected word{selectedIds.size > 1 ? "s" : ""}. This cannot be undone.
             </p>
             <div className="flex gap-2">
-              <button
-                onClick={() => handleDelete(confirmDelete)}
+                <button
+                onClick={executeDeleteSelected}
                 className="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 text-sm font-medium"
-              >
+                >
                 Delete
-              </button>
-              <button
-                onClick={() => setConfirmDelete(null)}
+                </button>
+                <button
+                onClick={() => setConfirmDeleteSelected(false)}
                 className="flex-1 border py-2 rounded hover:bg-gray-50 text-sm text-gray-600"
-              >
+                >
                 Cancel
-              </button>
+                </button>
             </div>
-          </div>
+            </div>
         </div>
-      )}
+        )}
 
     </div>
   );
