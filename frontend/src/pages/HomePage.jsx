@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar";
 export default function HomePage() {
   const [words, setWords] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   const navigate = useNavigate();
 
@@ -97,11 +98,25 @@ export default function HomePage() {
     setExpandedId((prev) => (prev === wordId ? null : wordId));
   }
 
+  function handleEnterSelection() {
+    setIsSelecting(true);
+    setExpandedId(null); // collapse any open card
+  }
+
+  function handleCancelSelection() {
+    setIsSelecting(false);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* ── Navbar ── */}
-      <Navbar wordCount={words.length} onAddClick={openAddModal} onLogout={handleLogout} />
+      <Navbar
+        wordCount={words.length}
+        onAddClick={openAddModal}
+        onLogout={handleLogout}
+        onSelectionClick={handleEnterSelection}
+      />
 
       {/* ── Page content — padded so list starts below navbar ── */}
       <div className="pt-16 px-4 pb-6 max-w-lg mx-auto">

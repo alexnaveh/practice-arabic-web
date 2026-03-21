@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function Navbar({ wordCount, onAddClick, onLogout }) {
+export default function Navbar({ wordCount, onAddClick, onLogout, onSelectionClick }) {
   const [phase, setPhase] = useState("title"); // "title" | "hamburger" | "menu"
   const [navHeight, setNavHeight] = useState(0);
   const navRef = useRef(null);
@@ -24,7 +24,7 @@ export default function Navbar({ wordCount, onAddClick, onLogout }) {
 
   const menuItems = [
     { label: "Sub-lists", icon: "📋" },
-    { label: "Selection", icon: "✅" },
+    { label: "Selection", icon: "✅", action: onSelectionClick },
     { label: "Dark Mode", icon: "🌙" },
     { label: "Logout", icon: "🚪", action: onLogout },
   ];
