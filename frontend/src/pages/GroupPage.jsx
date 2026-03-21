@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getGroupWords, removeWordsFromGroup, deleteGroup, renameGroup } from "../api";
 import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "../components/Navbar";
@@ -9,10 +9,11 @@ import ConfirmModal from "../components/ConfirmModal";
 export default function GroupPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // ── Words ──
   const [words, setWords] = useState([]);
-  const [groupName, setGroupName] = useState("");
+  const [groupName, setGroupName] = useState(location.state?.groupName || "");
   const [expandedId, setExpandedId] = useState(null);
 
   // ── Selection mode ──
@@ -31,12 +32,14 @@ export default function GroupPage() {
   useEffect(() => {
     getGroupWords(id)
       .then((data) => {
-        // Backend returns words array; group name comes from the groups list
-        // We fetch it from localStorage cache set by GroupsPage, or fall back to the id
-        const cached = JSON.parse(localStorage.getItem("groups_cache") || "[]");
-        const found = cached.find((g) => String(g.sublist_id) === String(id));
-        if (found) setGroupName(found.name);
         setWords(data);
+        // If we didn't get the name from router state (e.g. direct URL access),
+        // fall back to the groups cache written by GroupsPage
+        if (!location.state?.groupName) {
+          const cached = JSON.parse(localStorage.getItem("groups_cache") || "[]");
+          const found = cached.find((g) => String(g.sublist_id) === String(id));
+          if (found) setGroupName(found.name);
+        }
       })
       .catch(console.error);
   }, [id]);

@@ -162,7 +162,7 @@ export default function HomePage() {
       showToast(`Group "${name}" created! ✅`);
       setGroupModalMode(null);
       handleCancelSelection();
-      navigate(`/groups/${newGroup.sublist_id}`);
+      navigate(`/groups/${newGroup.sublist_id}`, { state: { groupName: name } });
     } catch {
       showToast("Failed to create group. Try again.", true);
     }
