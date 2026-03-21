@@ -14,8 +14,6 @@ export default function GroupPage() {
   // ── Words ──
   const [words, setWords] = useState([]);
   const [groupName, setGroupName] = useState(location.state?.groupName || "");
-  const [expandedId, setExpandedId] = useState(null);
-
   // ── Selection mode ──
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -168,10 +166,10 @@ export default function GroupPage() {
               <WordCard
                 key={word.word_id}
                 word={word}
-                isExpanded={expandedId === word.word_id}
+                isExpanded={false}
                 isSelecting={isSelecting}
                 isSelected={selectedIds.has(word.word_id)}
-                onToggleExpand={(id) => setExpandedId((prev) => (prev === id ? null : id))}
+                onToggleExpand={() => {}}
                 onToggleSelect={toggleSelectWord}
                 onEdit={() => {}}
                 onDelete={() => {}}
