@@ -44,7 +44,7 @@ export async function getWords() {
 
 export async function editWord(wordId, wordArabic, wordHebrew, description) {
   const token = localStorage.getItem("token");
-  const response = await fetch(`/api/words/${wordId}`, {
+  const response = await fetch(`${BASE_URL}/words/${wordId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -63,7 +63,7 @@ export async function editWord(wordId, wordArabic, wordHebrew, description) {
 
 export async function deleteWord(wordId) {
   const token = localStorage.getItem("token");
-  const response = await fetch(`/api/words/${wordId}`, {
+  const response = await fetch(`${BASE_URL}/words/${wordId}`, {
     method: "DELETE",
     headers: {
       "Authorization": `Bearer ${token}`,
@@ -71,5 +71,104 @@ export async function deleteWord(wordId) {
   });
 
   if (!response.ok) throw new Error("Failed to delete word");
+  return response.json();
+}
+
+// --- Group functions ---
+
+export async function getGroups() {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${BASE_URL}/groups`, {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) throw new Error("Failed to fetch groups");
+  return response.json();
+}
+
+export async function createGroup(name, wordIds) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${BASE_URL}/groups`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name, word_ids: wordIds }),
+  });
+
+  if (!response.ok) throw new Error("Failed to create group");
+  return response.json();
+}
+
+export async function renameGroup(sublistId, name) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${BASE_URL}/groups/${sublistId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) throw new Error("Failed to rename group");
+  return response.json();
+}
+
+export async function deleteGroup(sublistId) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${BASE_URL}/groups/${sublistId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) throw new Error("Failed to delete group");
+  return response.json();
+}
+
+export async function getGroupWords(sublistId) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${BASE_URL}/groups/${sublistId}/words`, {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) throw new Error("Failed to fetch group words");
+  return response.json();
+}
+
+export async function addWordsToGroup(sublistId, wordIds) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${BASE_URL}/groups/${sublistId}/words`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ word_ids: wordIds }),
+  });
+
+  if (!response.ok) throw new Error("Failed to add words to group");
+  return response.json();
+}
+
+export async function removeWordsFromGroup(sublistId, wordIds) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${BASE_URL}/groups/${sublistId}/words`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ word_ids: wordIds }),
+  });
+
+  if (!response.ok) throw new Error("Failed to remove words from group");
   return response.json();
 }
