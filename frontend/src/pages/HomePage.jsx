@@ -8,6 +8,7 @@ export default function HomePage() {
   const [words, setWords] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   const navigate = useNavigate();
 
@@ -94,18 +95,31 @@ export default function HomePage() {
     }
   }
 
-  function toggleExpand(wordId) {
-    setExpandedId((prev) => (prev === wordId ? null : wordId));
-  }
+    function toggleExpand(wordId) {
+        setExpandedId((prev) => (prev === wordId ? null : wordId));
+    }
 
-  function handleEnterSelection() {
-    setIsSelecting(true);
-    setExpandedId(null); // collapse any open card
-  }
+    function handleEnterSelection() {
+        setIsSelecting(true);
+        setExpandedId(null); // collapse any open card
+    }
 
-  function handleCancelSelection() {
-    setIsSelecting(false);
-  }
+    function handleCancelSelection() {
+        setIsSelecting(false);
+        setSelectedIds(new Set());
+    }
+
+    function toggleSelectWord(wordId) {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(wordId)) {
+                next.delete(wordId);
+            } else {
+                next.add(wordId);
+            }
+            return next;
+        });
+    }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,9 +130,9 @@ export default function HomePage() {
             onAddClick={openAddModal}
             onLogout={handleLogout}
             onSelectionClick={handleEnterSelection}
-            isSelecting={isSelecting}
-            selectedCount={0}
             onCancelSelection={handleCancelSelection}
+            isSelecting={isSelecting}
+            selectedCount={selectedIds.size}
         />
 
       {/* ── Page content — padded so list starts below navbar ── */}
@@ -149,39 +163,54 @@ export default function HomePage() {
         ) : (
           <ul className="space-y-3 mt-4">
             {words.map((word) => (
-              <li
-                key={word.word_id}
-                className="bg-white rounded shadow cursor-pointer"
-                onClick={() => toggleExpand(word.word_id)}
-              >
-                <div className="p-4">
-                  <div className="flex justify-between">
-                    <span className="text-lg font-semibold">{word.word_arabic}</span>
-                    <span className="text-gray-600">{word.word_hebrew}</span>
-                  </div>
-                  {word.description && (
-                    <p className="text-sm text-gray-400 mt-1">{word.description}</p>
-                  )}
-                </div>
+                <li
+                    key={word.word_id}
+                    className={`rounded shadow cursor-pointer transition-colors ${
+                        isSelecting && selectedIds.has(word.word_id)
+                        ? "bg-blue-50 border-l-4 border-blue-400"
+                        : "bg-white border-l-4 border-transparent"
+                    }`}
+                    onClick={() => {
+                        if (isSelecting) {
+                        toggleSelectWord(word.word_id);
+                        } else {
+                        toggleExpand(word.word_id);
+                        }
+                    }}
+                >
+                    <div className="p-4">
+                        <div className="flex items-center gap-3">
+                        <div className="flex justify-between flex-1">
+                            <span className="text-lg font-semibold">{word.word_arabic}</span>
+                            <span className="text-gray-600">{word.word_hebrew}</span>
+                        </div>
+                        </div>
+                        {word.description && (
+                        <p className={`text-sm text-gray-400 mt-1`}>
+                            {word.description}
+                        </p>
+                        )}
+                    </div>
 
-                {expandedId === word.word_id && (
-                  <div className="flex border-t">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openEditModal(word); }}
-                      className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
-                    >
-                      Edit
-                    </button>
-                    <div className="w-px bg-gray-200" />
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDelete(word); }}
-                      className="flex-1 py-2 text-sm text-red-500 hover:bg-red-50 font-medium"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
-              </li>
+                    {/* Edit/Delete — only show when NOT in selection mode */}
+                    {!isSelecting && expandedId === word.word_id && (
+                        <div className="flex border-t">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); openEditModal(word); }}
+                            className="flex-1 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                        >
+                            Edit
+                        </button>
+                        <div className="w-px bg-gray-200" />
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setConfirmDelete(word); }}
+                            className="flex-1 py-2 text-sm text-red-500 hover:bg-red-50 font-medium"
+                        >
+                            Delete
+                        </button>
+                        </div>
+                    )}
+                </li>
             ))}
           </ul>
         )}
