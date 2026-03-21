@@ -110,13 +110,16 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* ── Navbar ── */}
-      <Navbar
-        wordCount={words.length}
-        onAddClick={openAddModal}
-        onLogout={handleLogout}
-        onSelectionClick={handleEnterSelection}
-      />
+        {/* ── Navbar ── */}
+        <Navbar
+            wordCount={words.length}
+            onAddClick={openAddModal}
+            onLogout={handleLogout}
+            onSelectionClick={handleEnterSelection}
+            isSelecting={isSelecting}
+            selectedCount={0}
+            onCancelSelection={handleCancelSelection}
+        />
 
       {/* ── Page content — padded so list starts below navbar ── */}
       <div className="pt-16 px-4 pb-6 max-w-lg mx-auto">
