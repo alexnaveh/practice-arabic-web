@@ -63,6 +63,10 @@ export default function Navbar({
   isSelecting, selectedCount, onCancelSelection,
   onSelectAll, onDeleteSelected, onAddToGroup, onNewGroup,
 
+  // groups mode props
+  isSelectingGroups, selectedGroupsCount, onGroupsSelectionClick,
+  onCancelGroupsSelection, onSelectAllGroups, onDeleteSelectedGroups,
+
   // group mode props
   groupName, onEnterRemoveMode, onRemoveSelected,
   onDeleteGroup, onRenameGroup,
@@ -83,12 +87,12 @@ export default function Navbar({
   useEffect(() => {
     setPhase("title");
     setSelectionMenuOpen(false);
-  }, [isSelecting]);
+  }, [isSelecting, isSelectingGroups]);
 
   function handleTitleAreaClick() {
-    if (mode === "home" && isSelecting) {
-      setSelectionMenuOpen((prev) => !prev);
-    } else if (mode === "group" && isSelecting) {
+    if ((mode === "home" && isSelecting) ||
+        (mode === "group" && isSelecting) ||
+        (mode === "groups" && isSelectingGroups)) {
       setSelectionMenuOpen((prev) => !prev);
     } else {
       setPhase((prev) => (prev === "title" ? "menu" : "title"));
@@ -112,7 +116,14 @@ export default function Navbar({
   ];
 
   const groupsMenuItems = [
+    { label: "Selection", icon: "✅", action: onGroupsSelectionClick },
+    { label: "Home", icon: "🏠", action: onBack },
     { label: "Logout", icon: "🚪", action: onLogout },
+  ];
+
+  const groupsSelectionMenuItems = [
+    { label: "Select All", icon: "☑️", action: onSelectAllGroups },
+    { label: "Delete", icon: "🗑️", action: onDeleteSelectedGroups, disabled: selectedGroupsCount === 0 },
   ];
 
   const groupNormalMenuItems = [
@@ -134,7 +145,7 @@ export default function Navbar({
 
   // Title text
   let titleText = "Word Arsenal";
-  if (isGroupsMode) titleText = "Word Groups";
+  if (isGroupsMode) titleText = isSelectingGroups ? "Group Selection" : "Word Groups";
   if (isGroupMode) titleText = isSelecting ? "Word Selection" : (groupName || "Group");
   if (isHomeMode && isSelecting) titleText = "Word Selection";
 
@@ -145,6 +156,7 @@ export default function Navbar({
 
   // Which selection menu to show
   let selectionMenuItems = homeSelectionMenuItems;
+  if (isGroupsMode) selectionMenuItems = groupsSelectionMenuItems;
   if (isGroupMode) selectionMenuItems = groupSelectionMenuItems;
 
   return (
@@ -179,6 +191,7 @@ export default function Navbar({
           <span className="text-xs text-gray-400 font-medium">
             {isHomeMode && (isSelecting ? `${selectedCount} selected` : `${wordCount} words`)}
             {isGroupMode && isSelecting && `${selectedCount} selected`}
+            {isGroupsMode && isSelectingGroups && `${selectedGroupsCount} selected`}
           </span>
 
           {/* Right button */}
@@ -195,7 +208,20 @@ export default function Navbar({
             </button>
           )}
 
-          {(isGroupsMode || isGroupMode) && (
+          {isGroupsMode && (
+            <button
+              onClick={isSelectingGroups ? onCancelGroupsSelection : onBack}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                isSelectingGroups
+                  ? "bg-red-500 text-white hover:bg-red-600"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {isSelectingGroups ? "Cancel" : "Back"}
+            </button>
+          )}
+
+          {isGroupMode && (
             <button
               onClick={isSelecting ? onCancelSelection : onBack}
               className={`px-3 py-1.5 rounded-full text-sm font-medium ${
@@ -222,9 +248,9 @@ export default function Navbar({
         )}
       </AnimatePresence>
 
-      {/* Selection dropdown (home + group modes) */}
+      {/* Selection dropdown (home + groups + group modes) */}
       <AnimatePresence>
-        {(isHomeMode || isGroupMode) && isSelecting && selectionMenuOpen && (
+        {((isHomeMode && isSelecting) || (isGroupsMode && isSelectingGroups) || (isGroupMode && isSelecting)) && selectionMenuOpen && (
           <NavDropdown
             top={navHeight}
             items={selectionMenuItems}
