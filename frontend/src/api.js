@@ -1,13 +1,28 @@
 const BASE_URL = "/api";
 
-export async function loginUser(username) {
+export async function loginUser(email, password) {
   const response = await fetch(`${BASE_URL}/users/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username }),
+    body: JSON.stringify({ email, password }),
   });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || "Login failed");
+  }
+  return response.json();
+}
 
-  if (!response.ok) throw new Error("Login failed");
+export async function registerUser(email, password) {
+  const response = await fetch(`${BASE_URL}/users/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || "Registration failed");
+  }
   return response.json();
 }
 

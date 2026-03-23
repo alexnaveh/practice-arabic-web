@@ -2,10 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./index.css";
-import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import GroupsPage from "./pages/GroupsPage";
 import GroupPage from "./pages/GroupPage";
+import AuthPage from "./pages/AuthPage";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -16,7 +16,7 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<AuthPage />} />
         <Route
           path="/"
           element={
