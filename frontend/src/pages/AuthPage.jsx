@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginUser, registerUser } from "../api";
 
-const LABELS = ["تدرب على ملاحظات الضاد", "Dhad Notes", "פתקי הדאד",];
+const LABELS = ["ملاحظات الضاد", "Dhad Notes", "פתקי הדאד",];
 
 export default function AuthPage() {
     const [mode, setMode] = useState("login");
