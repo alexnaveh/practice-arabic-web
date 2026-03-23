@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { loginUser, registerUser } from "../api";
 
 const LABELS = ["تدرب على ملاحظات الضاد", "Dhad Notes", "פתקי הדאד",];
@@ -145,8 +145,13 @@ export default function AuthPage() {
         </button>
       </div>
 
-      {/* Footer watermark */}
-      <p className="text-xs text-[#B4B2A9] mt-6 tracking-wide">Made by Alex Naveh</p>
+        <div className="flex flex-col items-center gap-1 mt-6">
+            <p className="text-xs text-[#B4B2A9] tracking-wide">© 2026 Alex Naveh</p>
+            <div className="flex gap-3">
+                <Link to="/terms" className="text-xs text-[#B4B2A9] hover:text-[#D85A30] transition">Terms</Link>
+                <Link to="/privacy" className="text-xs text-[#B4B2A9] hover:text-[#D85A30] transition">Privacy</Link>
+            </div>
+        </div>
     </div>
   );
 }

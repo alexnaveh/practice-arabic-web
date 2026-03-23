@@ -6,6 +6,8 @@ import HomePage from "./pages/HomePage";
 import GroupsPage from "./pages/GroupsPage";
 import GroupPage from "./pages/GroupPage";
 import AuthPage from "./pages/AuthPage";
+import TermsPage from "./pages/legal/TermsPage";
+import PrivacyPage from "./pages/legal/PrivacyPage";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -41,6 +43,8 @@ createRoot(document.getElementById("root")).render(
             </PrivateRoute>
           }
         />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
