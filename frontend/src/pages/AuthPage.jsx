@@ -45,7 +45,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDF8F3] px-4">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-[#FDF8F3] px-4 pt-16">
 
       {/* Logo circle */}
         <div className="w-20 h-20 rounded-full border-4 border-[#FAECE7] overflow-hidden mb-4 shadow-sm">
