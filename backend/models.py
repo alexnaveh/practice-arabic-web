@@ -1,15 +1,15 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey, CheckConstraint
+from sqlalchemy import ForeignKey
 from database import Base
+
 
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = (
-        CheckConstraint("username = LOWER(username)", name="username_lowercase"),
-    )
 
-    user_id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    username: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(nullable=False)
+
 
 class Word(Base):
     __tablename__ = "words"
@@ -20,12 +20,14 @@ class Word(Base):
     word_hebrew: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str | None] = mapped_column(nullable=True)
 
+
 class SubList(Base):
     __tablename__ = "sub_lists"
 
     sublist_id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)
     name: Mapped[str] = mapped_column(nullable=False)
+
 
 class SubListWord(Base):
     __tablename__ = "sublist_words"

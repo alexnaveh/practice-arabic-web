@@ -1,16 +1,24 @@
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from typing import Optional
+from pydantic import BaseModel
 
 from database import engine, get_db
-from auth import create_access_token, decode_access_token
+from auth import create_access_token, decode_access_token, hash_password, verify_password
 import models
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 # --- CORS ---
 app.add_middleware(
@@ -33,9 +41,6 @@ def get_current_user(authorization: str = Header(...), db: Session = Depends(get
     return user
 
 # --- Request schemas ---
-class LoginRequest(BaseModel):
-    username: str
-
 class AddWordRequest(BaseModel):
     word_arabic: str
     word_hebrew: str
@@ -61,17 +66,25 @@ def read_root():
 
 @app.post("/users/login")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
-    username = request.username.strip().lower()
-    user = db.query(models.User).filter(models.User.username == username).first()
+    email = request.email.strip().lower()
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user or not verify_password(request.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    token = create_access_token(user.user_id)
+    return {"access_token": token}
 
-    if not user:
-        user = models.User(username=username)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    token = create_access_token(int(user.user_id))
-    return {"access_token": token, "token_type": "bearer"}
+@app.post("/users/register")
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    email = request.email.strip().lower()
+    existing = db.query(models.User).filter(models.User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user = models.User(email=email, hashed_password=hash_password(request.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_access_token(user.user_id)
+    return {"access_token": token}
 
 @app.post("/words")
 def add_word(request: AddWordRequest, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
