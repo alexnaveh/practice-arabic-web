@@ -39,7 +39,6 @@ export default function HomePage() {
 
   useEffect(() => { getWords().then(setWords).catch(console.error); }, []);
 
-  // ── Toast ──
   function showToast(message, isError = false) {
     setToast({ message, isError });
     setTimeout(() => setToast(null), 1500);
@@ -197,9 +196,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#FDF8F3]">
 
-      {/* ── Navbar ── */}
       <Navbar
         mode="home"
         wordCount={words.length}
@@ -216,7 +214,6 @@ export default function HomePage() {
         onNewGroup={handleOpenNewGroup}
       />
 
-      {/* ── Page content ── */}
       <div className="pt-16 px-4 pb-6 max-w-lg mx-auto">
 
         {/* Toast */}
@@ -231,8 +228,8 @@ export default function HomePage() {
                 enter: { type: "spring", stiffness: 300, damping: 25 },
                 exit: { type: "tween", ease: "easeIn", duration: 0.25 }
               }}
-              className={`fixed top-4 left-4 px-4 py-2 rounded shadow text-sm z-50 bg-white border-l-4 ${
-                toast.isError ? "border-red-500 text-red-700" : "border-green-500 text-green-700"
+              className={`fixed top-4 left-4 px-4 py-2 rounded-lg shadow-sm text-sm z-50 bg-white border border-[#E8E2DA] border-l-4 ${
+                toast.isError ? "border-l-red-500 text-red-700" : "border-l-[#D85A30] text-[#2C2C2A]"
               }`}
             >
               {toast.message}
@@ -242,7 +239,7 @@ export default function HomePage() {
 
         {/* Word list */}
         {words.length === 0 ? (
-          <p className="text-gray-400 text-center mt-20">No words yet. Add your first one!</p>
+          <p className="text-[#888780] text-center mt-20">No words yet. Add your first one!</p>
         ) : (
           <ul className="space-y-3 mt-4">
             {words.map((word) => (
@@ -262,7 +259,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* ── Add / Edit Modal ── */}
+      {/* Add / Edit Modal */}
       {showModal && (
         <WordModal
           editingWord={editingWord}
@@ -278,7 +275,7 @@ export default function HomePage() {
         />
       )}
 
-      {/* ── Group Modal (New Group / Add to Group) ── */}
+      {/* Group Modal (New Group / Add to Group) */}
       {groupModalMode && (
         <GroupModal
           mode={groupModalMode}
@@ -289,14 +286,14 @@ export default function HomePage() {
         />
       )}
 
-      {/* ── Single delete confirmation ── */}
+      {/* Single delete confirmation */}
       {confirmDelete && (
         <ConfirmModal
           title="Delete word?"
           message={
             <>
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-gray-700">{confirmDelete.word_arabic}</span>{" "}
+              <span className="font-semibold text-[#2C2C2A]">{confirmDelete.word_arabic}</span>{" "}
               ({confirmDelete.word_hebrew})?
             </>
           }
@@ -306,7 +303,7 @@ export default function HomePage() {
         />
       )}
 
-      {/* ── Multi-delete confirmation ── */}
+      {/* Multi-delete confirmation */}
       {confirmDeleteSelected && (
         <ConfirmModal
           title={`Delete ${selectedIds.size} word${selectedIds.size > 1 ? "s" : ""}?`}

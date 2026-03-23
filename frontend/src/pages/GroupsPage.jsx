@@ -21,7 +21,6 @@ export default function GroupsPage() {
     getGroups()
       .then((data) => {
         setGroups(data);
-        // Cache groups so GroupPage can read the group name without an extra endpoint
         localStorage.setItem("groups_cache", JSON.stringify(data));
       })
       .catch(console.error);
@@ -32,7 +31,6 @@ export default function GroupsPage() {
     setTimeout(() => setToast(null), 1500);
   }
 
-  // ── Selection mode ──
   function handleEnterSelection() {
     setIsSelecting(true);
   }
@@ -58,7 +56,6 @@ export default function GroupsPage() {
     }
   }
 
-  // ── Bulk delete ──
   async function executeDeleteSelected() {
     try {
       await Promise.all([...selectedIds].map((id) => deleteGroup(id)));
@@ -77,7 +74,7 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#FDF8F3]">
 
       <Navbar
         mode="groups"
@@ -105,8 +102,8 @@ export default function GroupsPage() {
                 enter: { type: "spring", stiffness: 300, damping: 25 },
                 exit: { type: "tween", ease: "easeIn", duration: 0.25 }
               }}
-              className={`fixed top-4 left-4 px-4 py-2 rounded shadow text-sm z-50 bg-white border-l-4 ${
-                toast.isError ? "border-red-500 text-red-700" : "border-green-500 text-green-700"
+              className={`fixed top-4 left-4 px-4 py-2 rounded-lg shadow-sm text-sm z-50 bg-white border border-[#E8E2DA] border-l-4 ${
+                toast.isError ? "border-l-red-500 text-red-700" : "border-l-[#D85A30] text-[#2C2C2A]"
               }`}
             >
               {toast.message}
@@ -117,8 +114,8 @@ export default function GroupsPage() {
         {groups.length === 0 ? (
           <div className="flex flex-col items-center mt-24 text-center">
             <span className="text-4xl mb-4">📋</span>
-            <p className="text-gray-500 font-medium">No word groups yet.</p>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-[#2C2C2A] font-medium">No word groups yet.</p>
+            <p className="text-[#888780] text-sm mt-1">
               Go back to your word list, enter Selection mode, and create your first group.
             </p>
           </div>
@@ -134,14 +131,14 @@ export default function GroupsPage() {
                       ? toggleSelectGroup(group.sublist_id)
                       : navigate(`/groups/${group.sublist_id}`)
                   }
-                  className={`rounded shadow p-4 text-left transition-colors ${
+                  className={`rounded-2xl shadow-sm p-4 text-left transition-colors border ${
                     isSelecting && isSelected
-                      ? "bg-blue-50 border-l-4 border-blue-400"
-                      : "bg-white border-l-4 border-transparent hover:bg-gray-50 active:bg-gray-100"
+                      ? "bg-[#FAECE7] border-[#D85A30]"
+                      : "bg-white border-[#E8E2DA] hover:bg-[#FDF8F3] active:bg-[#EDE5DC]"
                   }`}
                 >
-                  <p className="font-semibold text-gray-800 truncate">{group.name}</p>
-                  <p className="text-sm text-gray-400 mt-1">{group.word_count} words</p>
+                  <p className="font-semibold text-[#2C2C2A] truncate">{group.name}</p>
+                  <p className="text-sm text-[#888780] mt-1">{group.word_count} words</p>
                 </button>
               );
             })}

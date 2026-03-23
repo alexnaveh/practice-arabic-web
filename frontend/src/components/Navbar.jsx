@@ -18,7 +18,7 @@ function NavDropdown({ top, items, onClose }) {
       {/* Dropdown */}
       <motion.div
         key="dropdown"
-        className="fixed left-0 right-0 max-w-lg mx-auto z-20 bg-white border-b border-gray-200 shadow-md overflow-hidden"
+        className="fixed left-0 right-0 max-w-lg mx-auto z-20 bg-white border-b border-[#E8E2DA] shadow-md overflow-hidden"
         style={{ top }}
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: "auto", opacity: 1 }}
@@ -32,10 +32,10 @@ function NavDropdown({ top, items, onClose }) {
               initial={{ x: -15, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: index * 0.05, duration: 0.2 }}
-              className={`flex items-center gap-3 px-5 py-3 text-sm border-b border-gray-100 last:border-b-0 ${
+              className={`flex items-center gap-3 px-5 py-3 text-sm border-b border-[#E8E2DA] last:border-b-0 ${
                 item.disabled
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-50 cursor-pointer active:bg-gray-100"
+                  ? "text-[#B4B2A9] cursor-not-allowed"
+                  : "text-[#2C2C2A] hover:bg-[#FDF8F3] cursor-pointer active:bg-[#EDE5DC]"
               }`}
               onClick={() => {
                 if (!item.disabled) {
@@ -102,7 +102,7 @@ export default function Navbar({
   // ── Menu items per mode ──
 
   const homeNormalMenuItems = [
-    { label: "Word Groups", icon: "📋", action: onBack }, // onBack = navigate("/groups") in home context
+    { label: "Word Groups", icon: "📋", action: onBack },
     { label: "Selection", icon: "✅", action: onSelectionClick },
     { label: "Dark Mode", icon: "🌙" },
     { label: "Logout", icon: "🚪", action: onLogout },
@@ -163,7 +163,7 @@ export default function Navbar({
     <>
       <nav
         ref={navRef}
-        className="fixed top-0 left-0 right-0 z-30 bg-white shadow-md border-b border-gray-200"
+        className="fixed top-0 left-0 right-0 z-30 bg-white shadow-sm border-b border-[#E8E2DA]"
       >
         <div className="flex items-center justify-between px-4 py-4 max-w-lg mx-auto">
 
@@ -176,7 +176,7 @@ export default function Navbar({
             <AnimatePresence mode="wait">
               <motion.span
                 key={titleText}
-                className="text-lg font-bold text-gray-800 absolute"
+                className="text-lg font-semibold text-[#2C2C2A] absolute"
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -30, opacity: 0 }}
@@ -188,7 +188,7 @@ export default function Navbar({
           </div>
 
           {/* Center count */}
-          <span className="text-xs text-gray-400 font-medium">
+          <span className="text-xs text-[#888780] font-medium">
             {isHomeMode && (isSelecting ? `${selectedCount} selected` : `${wordCount} words`)}
             {isGroupMode && isSelecting && `${selectedCount} selected`}
             {isGroupsMode && isSelectingGroups && `${selectedGroupsCount} selected`}
@@ -198,10 +198,10 @@ export default function Navbar({
           {isHomeMode && (
             <button
               onClick={isSelecting ? onCancelSelection : onAddClick}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
                 isSelecting
                   ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-[#D85A30] text-white hover:bg-[#C24E27]"
               }`}
             >
               {isSelecting ? "Cancel" : "New Word"}
@@ -211,10 +211,10 @@ export default function Navbar({
           {isGroupsMode && (
             <button
               onClick={isSelectingGroups ? onCancelGroupsSelection : onBack}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
                 isSelectingGroups
                   ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-[#EDE5DC] text-[#888780] hover:bg-[#D3D1C7]"
               }`}
             >
               {isSelectingGroups ? "Cancel" : "Back"}
@@ -224,10 +224,10 @@ export default function Navbar({
           {isGroupMode && (
             <button
               onClick={isSelecting ? onCancelSelection : onBack}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
                 isSelecting
                   ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-[#EDE5DC] text-[#888780] hover:bg-[#D3D1C7]"
               }`}
             >
               {isSelecting ? "Cancel" : "Back"}
@@ -248,7 +248,7 @@ export default function Navbar({
         )}
       </AnimatePresence>
 
-      {/* Selection dropdown (home + groups + group modes) */}
+      {/* Selection dropdown */}
       <AnimatePresence>
         {((isHomeMode && isSelecting) || (isGroupsMode && isSelectingGroups) || (isGroupMode && isSelecting)) && selectionMenuOpen && (
           <NavDropdown
