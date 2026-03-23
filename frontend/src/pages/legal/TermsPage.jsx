@@ -10,7 +10,7 @@ export default function TermsPage() {
           onClick={() => navigate(-1)}
           className="text-sm text-[#888780] mb-4 hover:text-[#D85A30] transition"
         >
-          ← Back
+            Back
         </button>
 
         <h1 className="text-lg font-semibold text-[#2C2C2A] mb-1">Terms of Service</h1>
