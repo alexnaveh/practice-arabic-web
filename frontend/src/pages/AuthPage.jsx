@@ -1,25 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser, registerUser } from "../api";
 
+const LABELS = ["تدرب على ملاحظات الضاد", "Dhad Notes", "פתקי הדאד",];
+
 export default function AuthPage() {
-  const [mode, setMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+    const [mode, setMode] = useState("login");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+    const [labelIndex, setLabelIndex] = useState(0);
+    const [labelVisible, setLabelVisible] = useState(true);
 
-  function switchMode(newMode) {
-    setMode(newMode);
-    setError("");
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-  }
 
-  async function handleSubmit() {
-    setError("");
+    useEffect(() => {
+    const interval = setInterval(() => {
+        setLabelVisible(false);
+        setTimeout(() => {
+        setLabelIndex((prev) => (prev + 1) % LABELS.length);
+        setLabelVisible(true);
+        }, 200);
+    }, 3000);
+
+    return () => clearInterval(interval);
+    }, []);
+
+    function switchMode(newMode) {
+        setMode(newMode);
+        setError("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+    }
+
+    async function handleSubmit() {
+        setError("");
 
     if (!email.trim() || !password.trim()) {
       setError("Please fill in all fields");
@@ -44,20 +61,28 @@ export default function AuthPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-[#FDF8F3] px-4 pt-16">
+    return (
+    <div className="min-h-screen flex flex-col items-center justify-start bg-[#FDF8F3] px-4 pt-8">
 
-      {/* Logo circle */}
+        {/* Logo circle */}
         <div className="w-20 h-20 rounded-full border-4 border-[#FAECE7] overflow-hidden mb-4 shadow-sm">
             <img src="/icon-192.png" alt="App logo" className="w-full h-full object-cover" />
         </div>
 
-      {/* App name + subtitle */}
-      <h1 className="text-lg font-semibold text-[#2C2C2A] mb-1">Practice Arabic</h1>
-      <p className="text-sm text-[#888780] mb-6">Your personal word bank</p>
+        {/* App name + subtitle */}
+        <h1
+            className="text-lg font-semibold text-[#2C2C2A] mb-1 transition-all duration-300"
+            style={{
+                opacity: labelVisible ? 1 : 0,
+                transform: labelVisible ? "translateY(0)" : "translateY(-10px)",
+            }}
+        >
+            {LABELS[labelIndex]}
+        </h1>
+        <p className="text-sm text-[#888780] mb-6">"Hold the words in your pocket"</p>
 
-      {/* Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-[#E8E2DA] w-full max-w-sm p-6">
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-[#E8E2DA] w-full max-w-sm p-6">
 
         {/* Toggle */}
         <div className="flex bg-[#EDE5DC] rounded-xl p-1 mb-5">
