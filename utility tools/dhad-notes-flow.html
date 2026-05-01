@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dhad Notes — App Architecture & Flow</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --bg2: #16161a;
+    --bg3: #1c1c22;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8e6df;
+    --muted: #888780;
+    --coral: #D85A30;
+    --coral-dim: rgba(216,90,48,0.15);
+    --coral-border: rgba(216,90,48,0.4);
+    --teal: #1D9E75;
+    --teal-dim: rgba(29,158,117,0.12);
+    --teal-border: rgba(29,158,117,0.35);
+    --blue: #378ADD;
+    --blue-dim: rgba(55,138,221,0.12);
+    --blue-border: rgba(55,138,221,0.3);
+    --amber: #BA7517;
+    --amber-dim: rgba(186,117,23,0.12);
+    --amber-border: rgba(186,117,23,0.3);
+    --purple: #7F77DD;
+    --purple-dim: rgba(127,119,221,0.12);
+    --purple-border: rgba(127,119,221,0.3);
+    --gray-dim: rgba(136,135,128,0.1);
+    --gray-border: rgba(136,135,128,0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 40px 32px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 52px;
+    border-bottom: 0.5px solid var(--border2);
+    padding-bottom: 28px;
+  }
+
+  .app-name {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--coral);
+    font-family: 'SF Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: var(--border);
+  }
+
+  section { margin-bottom: 56px; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: -apple-system, sans-serif;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  /* ── FLOW GRID ── */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: 1fr 2px 1fr 2px 1fr;
+    gap: 0;
+    margin-bottom: 40px;
+  }
+
+  .flow-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .col-header {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    padding: 10px 0 14px;
+    font-family: -apple-system, sans-serif;
+  }
+
+  .divider-line {
+    background: var(--border);
+    width: 2px;
+    margin-top: 36px;
+  }
+
+  /* ── NODE CARDS ── */
+  .node {
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: var(--bg2);
+    margin: 4px 8px;
+    position: relative;
+    transition: border-color 0.15s;
+    cursor: default;
+  }
+
+  .node:hover { border-color: var(--border2); }
+
+  .node-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: -apple-system, sans-serif;
+    margin-bottom: 3px;
+  }
+
+  .node-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: -apple-system, sans-serif;
+    line-height: 1.4;
+  }
+
+  .node-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 6px;
+    font-family: 'SF Mono', monospace;
+  }
+
+  /* color variants */
+  .node.coral  { border-color: var(--coral-border);  background: var(--coral-dim);  }
+  .node.teal   { border-color: var(--teal-border);   background: var(--teal-dim);   }
+  .node.blue   { border-color: var(--blue-border);   background: var(--blue-dim);   }
+  .node.amber  { border-color: var(--amber-border);  background: var(--amber-dim);  }
+  .node.purple { border-color: var(--purple-border); background: var(--purple-dim); }
+
+  .tag-coral  { background: var(--coral-dim);  color: var(--coral);  border: 0.5px solid var(--coral-border);  }
+  .tag-teal   { background: var(--teal-dim);   color: var(--teal);   border: 0.5px solid var(--teal-border);   }
+  .tag-blue   { background: var(--blue-dim);   color: var(--blue);   border: 0.5px solid var(--blue-border);   }
+  .tag-amber  { background: var(--amber-dim);  color: var(--amber);  border: 0.5px solid var(--amber-border);  }
+  .tag-purple { background: var(--purple-dim); color: var(--purple); border: 0.5px solid var(--purple-border); }
+  .tag-gray   { background: var(--gray-dim);   color: var(--muted);  border: 0.5px solid var(--gray-border);   }
+
+  /* ── ROUTE TABLE ── */
+  .route-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .route-table th {
+    text-align: left;
+    padding: 8px 14px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 0.5px solid var(--border);
+    font-family: -apple-system, sans-serif;
+  }
+
+  .route-table td {
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--border);
+    vertical-align: top;
+    font-family: -apple-system, sans-serif;
+  }
+
+  .route-table tr:last-child td { border-bottom: none; }
+  .route-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .method {
+    display: inline-block;
+    font-size: 9px;
+    font-family: 'SF Mono', monospace;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    min-width: 44px;
+    text-align: center;
+  }
+
+  .get    { background: rgba(29,158,117,0.18); color: #1D9E75; }
+  .post   { background: rgba(55,138,221,0.18); color: #378ADD; }
+  .put    { background: rgba(186,117,23,0.18); color: #BA7517; }
+  .delete { background: rgba(226,75,74,0.18);  color: #E24B4A; }
+
+  .route-path {
+    font-family: 'SF Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text);
+  }
+
+  .route-desc { color: var(--muted); font-size: 11px; }
+
+  /* ── DB SCHEMA ── */
+  .schema-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .db-table {
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg2);
+  }
+
+  .db-table-header {
+    padding: 9px 14px;
+    background: var(--bg3);
+    border-bottom: 0.5px solid var(--border2);
+    font-size: 11px;
+    font-family: 'SF Mono', monospace;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .db-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 14px;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 11px;
+  }
+
+  .db-row:last-child { border-bottom: none; }
+
+  .db-field { color: var(--text); font-family: 'SF Mono', monospace; }
+  .db-type  { color: var(--muted); font-family: 'SF Mono', monospace; font-size: 10px; }
+
+  .pk  { color: var(--amber); }
+  .fk  { color: var(--blue); }
+  .opt { color: var(--muted); }
+
+  /* ── AUTH FLOW ── */
+  .auth-flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .flow-step {
+    flex: 0 0 auto;
+    width: 160px;
+  }
+
+  .flow-step-box {
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg2);
+    padding: 12px;
+    margin: 0 4px;
+    min-height: 70px;
+  }
+
+  .flow-step-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 6px;
+    font-family: -apple-system, sans-serif;
+  }
+
+  .flow-step-content {
+    font-size: 11px;
+    color: var(--text);
+    font-family: -apple-system, sans-serif;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .flow-arrow {
+    flex: 0 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 28px;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  /* ── STACK TABLE ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stack-card {
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg2);
+    padding: 14px;
+  }
+
+  .stack-layer {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: -apple-system, sans-serif;
+  }
+
+  .stack-tech {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    font-family: -apple-system, sans-serif;
+    margin-bottom: 3px;
+  }
+
+  .stack-detail {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: -apple-system, sans-serif;
+    line-height: 1.4;
+  }
+
+  /* ── FEATURE STATUS ── */
+  .feature-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0.5px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg2);
+    font-family: -apple-system, sans-serif;
+  }
+
+  .feature-status {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .feature-text { font-size: 12px; color: var(--text); }
+  .feature-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  /* misc */
+  .spacer { height: 8px; }
+  .conn-line {
+    text-align: center;
+    color: var(--muted);
+    font-size: 18px;
+    padding: 2px 0;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 20px;
+    font-family: 'SF Mono', monospace;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .rel-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 14px;
+    font-family: 'SF Mono', monospace;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .rel-line:last-child { border-bottom: none; }
+  .rel-line .rel-name { color: var(--text); }
+
+  .full-row { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-name">💬 Dhad Notes</div>
+  <h1>App Architecture & Flow</h1>
+  <p class="subtitle">Engineering reference — routes, data model, auth, and feature status</p>
+</header>
+
+<!-- ── LEGEND ── -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Frontend / React</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Backend / FastAPI</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Database / SQLite</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Auth / JWT</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Shared logic</div>
+</div>
+
+<!-- ── 1. STACK ── -->
+<section>
+  <div class="section-label">01 — tech stack</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="stack-layer">Frontend</div>
+      <div class="stack-tech">React + Vite</div>
+      <div class="stack-detail">Component-based UI, fast HMR. Routes via react-router-dom. Tailwind CSS for styling.</div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-layer">Backend</div>
+      <div class="stack-tech">FastAPI (Python)</div>
+      <div class="stack-detail">REST API. SQLAlchemy ORM. Pydantic schemas. Uvicorn ASGI server.</div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-layer">Database</div>
+      <div class="stack-tech">SQLite → PostgreSQL</div>
+      <div class="stack-detail">Dev: SQLite locally. Prod: PostgreSQL on Render. Migration via SQLAlchemy is drop-in.</div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-layer">Auth</div>
+      <div class="stack-tech">JWT + bcrypt</div>
+      <div class="stack-detail">Stateless JWTs stored in localStorage. Passwords hashed via bcrypt. No session state on server.</div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-layer">Dev Proxy</div>
+      <div class="stack-tech">Vite proxy → :8000</div>
+      <div class="stack-detail">All /api/* requests proxied to FastAPI. Fixes CORS and mobile network access on LAN.</div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-layer">Deployment (planned)</div>
+      <div class="stack-tech">Vercel + Render</div>
+      <div class="stack-detail">Frontend → Vercel. Backend → Render. Database → Render PostgreSQL.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 2. AUTH FLOW ── -->
+<section>
+  <div class="section-label">02 — authentication flow</div>
+  <div class="auth-flow">
+    <div class="flow-step">
+      <div class="flow-step-label">Client</div>
+      <div class="flow-step-box coral" style="border-color:var(--coral-border);background:var(--coral-dim)">
+        <div class="flow-step-content">User submits<br><strong>email + password</strong><br>on AuthPage.jsx</div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-label">API</div>
+      <div class="flow-step-box" style="border-color:var(--blue-border);background:var(--blue-dim)">
+        <div class="flow-step-content"><code style="font-size:10px">POST /users/login</code><br>or<br><code style="font-size:10px">POST /users/register</code></div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-label">Backend logic</div>
+      <div class="flow-step-box" style="border-color:var(--amber-border);background:var(--amber-dim)">
+        <div class="flow-step-content">Normalize email<br>Verify bcrypt hash<br>Generate JWT</div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-label">Response</div>
+      <div class="flow-step-box" style="border-color:var(--teal-border);background:var(--teal-dim)">
+        <div class="flow-step-content">JWT token<br>stored in<br><code style="font-size:10px">localStorage</code></div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-label">All requests</div>
+      <div class="flow-step-box" style="border-color:var(--purple-border);background:var(--purple-dim)">
+        <div class="flow-step-content"><code style="font-size:10px">Authorization: Bearer &lt;jwt&gt;</code><br>header on every call</div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-label">Guard</div>
+      <div class="flow-step-box" style="border-color:var(--border2)">
+        <div class="flow-step-content"><code style="font-size:10px">get_current_user()</code><br>FastAPI dependency<br>on all protected routes</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px;padding:10px 14px;border:0.5px solid var(--border);border-radius:7px;background:var(--bg2);font-size:11px;color:var(--muted);font-family:-apple-system,sans-serif;">
+    <strong style="color:var(--text)">PrivateRoute</strong> in main.jsx wraps all protected pages — if no token in localStorage, redirects to <code style="font-size:10px">/login</code>. Logout clears the token and React Router handles the redirect.
+  </div>
+</section>
+
+<!-- ── 3. FRONTEND ROUTES ── -->
+<section>
+  <div class="section-label">03 — frontend routes</div>
+  <table class="route-table">
+    <thead>
+      <tr>
+        <th style="width:140px">Path</th>
+        <th style="width:110px">Component</th>
+        <th style="width:80px">Guard</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="route-path">/login</span></td>
+        <td><span style="font-family:'SF Mono',monospace;font-size:11px;color:var(--coral)">AuthPage.jsx</span></td>
+        <td><span class="badge tag-gray">public</span></td>
+        <td class="route-desc">Login + Register toggle. Animated multilingual title. Warm #FDF8F3 design.</td>
+      </tr>
+      <tr>
+        <td><span class="route-path">/</span></td>
+        <td><span style="font-family:'SF Mono',monospace;font-size:11px;color:var(--coral)">HomePage.jsx</span></td>
+        <td><span class="badge tag-amber">private</span></td>
+        <td class="route-desc">Main word list. Navbar with hamburger. Add/edit/delete/select words. Toast feedback.</td>
+      </tr>
+      <tr>
+        <td><span class="route-path">/groups</span></td>
+        <td><span style="font-family:'SF Mono',monospace;font-size:11px;color:var(--coral)">GroupsPage.jsx</span></td>
+        <td><span class="badge tag-amber">private</span></td>
+        <td class="route-desc">2-column card grid of all word groups. Bulk delete. Empty state. localStorage name cache.</td>
+      </tr>
+      <tr>
+        <td><span class="route-path">/groups/:id</span></td>
+        <td><span style="font-family:'SF Mono',monospace;font-size:11px;color:var(--coral)">GroupPage.jsx</span></td>
+        <td><span class="badge tag-amber">private</span></td>
+        <td class="route-desc">Words in a group (read-only WordCards). Rename/delete group. Remove words via selection mode.</td>
+      </tr>
+      <tr>
+        <td><span class="route-path">/terms</span></td>
+        <td><span style="font-family:'SF Mono',monospace;font-size:11px;color:var(--coral)">TermsPage.jsx</span></td>
+        <td><span class="badge tag-gray">public</span></td>
+        <td class="route-desc">Static Terms of Service page. MIT © 2026.</td>
+      </tr>
+      <tr>
+        <td><span class="route-path">/privacy</span></td>
+        <td><span style="font-family:'SF Mono',monospace;font-size:11px;color:var(--coral)">PrivacyPage.jsx</span></td>
+        <td><span class="badge tag-gray">public</span></td>
+        <td class="route-desc">Static Privacy Policy page.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── 4. BACKEND API ── -->
+<section>
+  <div class="section-label">04 — backend API (FastAPI / main.py)</div>
+  <table class="route-table">
+    <thead>
+      <tr>
+        <th style="width:70px">Method</th>
+        <th style="width:210px">Route</th>
+        <th style="width:80px">Auth</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><span class="route-path">/users/register</span></td>
+        <td><span class="badge tag-gray">public</span></td>
+        <td class="route-desc">Validate email uniqueness, hash password with bcrypt, create user, return JWT immediately.</td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><span class="route-path">/users/login</span></td>
+        <td><span class="badge tag-gray">public</span></td>
+        <td class="route-desc">Strip+lower email, verify bcrypt hash, return JWT. Exact error messages surfaced to client.</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><span class="route-path">/words</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Fetch all words owned by current user. Filtered by user_id from JWT.</td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><span class="route-path">/words</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Create a word (arabic, hebrew, description?). Linked to current user_id.</td>
+      </tr>
+      <tr>
+        <td><span class="method put">PUT</span></td>
+        <td><span class="route-path">/words/{word_id}</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Update word fields. Filter by word_id AND user_id — ownership enforced at query level.</td>
+      </tr>
+      <tr>
+        <td><span class="method delete">DELETE</span></td>
+        <td><span class="route-path">/words/{word_id}</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Delete a word. Same ownership guard. Cannot delete another user's word.</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><span class="route-path">/groups</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">All groups for current user, each with computed word_count.</td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><span class="route-path">/groups</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Create group with name + initial word_ids. Junction rows inserted into sublist_words.</td>
+      </tr>
+      <tr>
+        <td><span class="method put">PUT</span></td>
+        <td><span class="route-path">/groups/{id}</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Rename a group.</td>
+      </tr>
+      <tr>
+        <td><span class="method delete">DELETE</span></td>
+        <td><span class="route-path">/groups/{id}</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Delete group and all its junction rows in sublist_words.</td>
+      </tr>
+      <tr>
+        <td><span class="method get">GET</span></td>
+        <td><span class="route-path">/groups/{id}/words</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">All words belonging to a specific group.</td>
+      </tr>
+      <tr>
+        <td><span class="method post">POST</span></td>
+        <td><span class="route-path">/groups/{id}/words</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Add words to a group. Skips duplicates (idempotent).</td>
+      </tr>
+      <tr>
+        <td><span class="method delete">DELETE</span></td>
+        <td><span class="route-path">/groups/{id}/words</span></td>
+        <td><span class="badge tag-amber">jwt</span></td>
+        <td class="route-desc">Remove specific words from a group (not delete the words themselves).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── 5. DATABASE ── -->
+<section>
+  <div class="section-label">05 — database schema</div>
+  <div class="schema-grid">
+    <div class="db-table">
+      <div class="db-table-header">
+        <span>users</span>
+        <span class="badge tag-teal" style="background:var(--teal-dim);color:var(--teal);border:0.5px solid var(--teal-border)">sqlite</span>
+      </div>
+      <div class="db-row"><span class="db-field pk">user_id</span><span class="db-type">INTEGER PK</span></div>
+      <div class="db-row"><span class="db-field">email</span><span class="db-type">TEXT UNIQUE</span></div>
+      <div class="db-row"><span class="db-field">hashed_password</span><span class="db-type">TEXT</span></div>
+      <div style="padding:8px 14px;font-size:10px;color:var(--muted);font-family:-apple-system,sans-serif;border-top:0.5px solid var(--border)">
+        email normalized: .strip().lower()<br>CheckConstraint enforces lowercase at DB level
+      </div>
+    </div>
+
+    <div class="db-table">
+      <div class="db-table-header">
+        <span>words</span>
+        <span class="badge tag-teal" style="background:var(--teal-dim);color:var(--teal);border:0.5px solid var(--teal-border)">sqlite</span>
+      </div>
+      <div class="db-row"><span class="db-field pk">word_id</span><span class="db-type">INTEGER PK</span></div>
+      <div class="db-row"><span class="db-field fk">user_id</span><span class="db-type">FK → users</span></div>
+      <div class="db-row"><span class="db-field">word_arabic</span><span class="db-type">TEXT</span></div>
+      <div class="db-row"><span class="db-field">word_hebrew</span><span class="db-type">TEXT</span></div>
+      <div class="db-row"><span class="db-field opt">description</span><span class="db-type">TEXT nullable</span></div>
+    </div>
+
+    <div class="db-table">
+      <div class="db-table-header">
+        <span>sub_list</span>
+        <span class="badge tag-teal" style="background:var(--teal-dim);color:var(--teal);border:0.5px solid var(--teal-border)">sqlite</span>
+      </div>
+      <div class="db-row"><span class="db-field pk">sublist_id</span><span class="db-type">INTEGER PK</span></div>
+      <div class="db-row"><span class="db-field fk">user_id</span><span class="db-type">FK → users</span></div>
+      <div class="db-row"><span class="db-field">name</span><span class="db-type">TEXT</span></div>
+    </div>
+
+    <div class="db-table">
+      <div class="db-table-header">
+        <span>sublist_words</span>
+        <span class="badge tag-purple" style="background:var(--purple-dim);color:var(--purple);border:0.5px solid var(--purple-border)">junction</span>
+      </div>
+      <div class="db-row"><span class="db-field pk">id</span><span class="db-type">INTEGER PK</span></div>
+      <div class="db-row"><span class="db-field fk">sublist_id</span><span class="db-type">FK → sub_list</span></div>
+      <div class="db-row"><span class="db-field fk">word_id</span><span class="db-type">FK → words</span></div>
+      <div style="padding:8px 14px;font-size:10px;color:var(--muted);font-family:-apple-system,sans-serif;border-top:0.5px solid var(--border)">
+        Many-to-many: one word can belong<br>to multiple sub_lists
+      </div>
+    </div>
+  </div>
+
+  <!-- Relationships -->
+  <div style="margin-top:16px;border:0.5px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden">
+    <div class="rel-line">
+      <span style="color:var(--muted);font-size:10px;min-width:100px">RELATIONSHIP</span>
+      <span style="color:var(--muted);font-size:10px;min-width:60px">TYPE</span>
+      <span style="color:var(--muted);font-size:10px">NOTE</span>
+    </div>
+    <div class="rel-line">
+      <span class="rel-name" style="min-width:100px">user → words</span>
+      <span style="min-width:60px;color:var(--muted);font-size:11px">1 : many</span>
+      <span style="color:var(--muted);font-size:11px">User can own many words. Cascade delete not set — words persist if user deleted.</span>
+    </div>
+    <div class="rel-line">
+      <span class="rel-name" style="min-width:100px">user → sub_list</span>
+      <span style="min-width:60px;color:var(--muted);font-size:11px">1 : many</span>
+      <span style="color:var(--muted);font-size:11px">User can own many groups. Delete group → deletes its junction rows.</span>
+    </div>
+    <div class="rel-line">
+      <span class="rel-name" style="min-width:100px">words ↔ sub_list</span>
+      <span style="min-width:60px;color:var(--muted);font-size:11px">many : many</span>
+      <span style="color:var(--muted);font-size:11px">Via sublist_words junction. A word can live in multiple groups simultaneously.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── 6. COMPONENT TREE ── -->
+<section>
+  <div class="section-label">06 — frontend component tree</div>
+  <div style="border:0.5px solid var(--border);border-radius:8px;background:var(--bg2);padding:20px 24px;font-family:'SF Mono',monospace;font-size:12px;line-height:2.0">
+    <div style="color:var(--coral)">main.jsx</div>
+    <div style="color:var(--muted);padding-left:20px">├── <span style="color:var(--text)">PrivateRoute</span> <span style="color:var(--muted);font-size:10px">// JWT guard wrapper</span></div>
+    <div style="color:var(--muted);padding-left:40px">├── <span style="color:var(--coral)">HomePage.jsx</span> <span style="color:var(--muted);font-size:10px">// route: /</span></div>
+    <div style="color:var(--muted);padding-left:60px">├── <span style="color:var(--text)">Navbar.jsx</span> <span style="color:var(--muted);font-size:10px">// mode="home", sticky fixed</span></div>
+    <div style="color:var(--muted);padding-left:60px">├── <span style="color:var(--text)">WordCard.jsx</span> <span style="color:var(--muted);font-size:10px">// expand/collapse, selection mode</span></div>
+    <div style="color:var(--muted);padding-left:60px">├── <span style="color:var(--text)">WordModal.jsx</span> <span style="color:var(--muted);font-size:10px">// add + edit (same component, mode prop)</span></div>
+    <div style="color:var(--muted);padding-left:60px">├── <span style="color:var(--text)">ConfirmModal.jsx</span> <span style="color:var(--muted);font-size:10px">// delete confirmation</span></div>
+    <div style="color:var(--muted);padding-left:60px">└── <span style="color:var(--text)">GroupModal.jsx</span> <span style="color:var(--muted);font-size:10px">// mode="new" | mode="add"</span></div>
+    <div style="color:var(--muted);padding-left:40px">├── <span style="color:var(--coral)">GroupsPage.jsx</span> <span style="color:var(--muted);font-size:10px">// route: /groups</span></div>
+    <div style="color:var(--muted);padding-left:60px">└── <span style="color:var(--text)">Navbar.jsx</span> <span style="color:var(--muted);font-size:10px">// mode="groups"</span></div>
+    <div style="color:var(--muted);padding-left:40px">└── <span style="color:var(--coral)">GroupPage.jsx</span> <span style="color:var(--muted);font-size:10px">// route: /groups/:id</span></div>
+    <div style="color:var(--muted);padding-left:60px">├── <span style="color:var(--text)">Navbar.jsx</span> <span style="color:var(--muted);font-size:10px">// mode="group"</span></div>
+    <div style="color:var(--muted);padding-left:60px">└── <span style="color:var(--text)">WordCard.jsx</span> <span style="color:var(--muted);font-size:10px">// read-only, no expand</span></div>
+    <div style="color:var(--muted);padding-left:20px">├── <span style="color:var(--coral)">AuthPage.jsx</span> <span style="color:var(--muted);font-size:10px">// route: /login  (public)</span></div>
+    <div style="color:var(--muted);padding-left:20px">├── <span style="color:var(--coral)">TermsPage.jsx</span> <span style="color:var(--muted);font-size:10px">// route: /terms  (public)</span></div>
+    <div style="color:var(--muted);padding-left:20px">└── <span style="color:var(--coral)">PrivacyPage.jsx</span> <span style="color:var(--muted);font-size:10px">// route: /privacy (public)</span></div>
+  </div>
+</section>
+
+<!-- ── 7. SELECTION MODE FLOW ── -->
+<section>
+  <div class="section-label">07 — selection mode state machine</div>
+  <div style="border:0.5px solid var(--border);border-radius:8px;background:var(--bg2);padding:20px 24px;font-family:'SF Mono',monospace;font-size:11px;line-height:2.2">
+    <div style="color:var(--muted)">// isSelecting: boolean  |  selectedIds: Set&lt;number&gt;</div>
+    <div style="height:8px"></div>
+    <div><span style="color:var(--amber)">NORMAL MODE</span> <span style="color:var(--muted)">────────────────────────────────────────────</span></div>
+    <div style="padding-left:20px;color:var(--muted)">tap card → expand (show Edit / Delete buttons)</div>
+    <div style="padding-left:20px;color:var(--muted)">tap same → collapse</div>
+    <div style="padding-left:20px;color:var(--muted)">navbar dropdown → "Selection" → <span style="color:var(--text)">isSelecting = true</span></div>
+    <div style="height:4px"></div>
+    <div><span style="color:var(--coral)">SELECTION MODE</span> <span style="color:var(--muted)">─────────────────────────────────────────</span></div>
+    <div style="padding-left:20px;color:var(--muted)">all expanded cards collapse immediately</div>
+    <div style="padding-left:20px;color:var(--muted)">tap card → toggle selectedIds (no expand)</div>
+    <div style="padding-left:20px;color:var(--muted)">navbar counter: "X selected" (not word count)</div>
+    <div style="padding-left:20px;color:var(--muted)">action bar appears: SelectAll / Delete / AddToGroup / NewGroup / Cancel</div>
+    <div style="padding-left:20px;color:var(--muted)">Delete → ConfirmModal → <span style="color:var(--text)">Promise.all(deleteWord)</span> → filter local state</div>
+    <div style="padding-left:20px;color:var(--muted)">NewGroup → GroupModal(mode="new") → POST /groups → navigate /groups/:id</div>
+    <div style="padding-left:20px;color:var(--muted)">AddToGroup → fetch groups → GroupModal(mode="add") → POST /groups/:id/words</div>
+    <div style="padding-left:20px;color:var(--muted)">Cancel → <span style="color:var(--text)">isSelecting = false, selectedIds.clear()</span></div>
+  </div>
+</section>
+
+<!-- ── 8. FEATURE STATUS ── -->
+<section>
+  <div class="section-label">08 — feature status</div>
+  <div class="feature-list">
+    <div class="feature-item">
+      <div class="feature-status">✅</div>
+      <div>
+        <div class="feature-text">User auth (email + password)</div>
+        <div class="feature-sub">bcrypt · JWT · AuthPage toggle</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">✅</div>
+      <div>
+        <div class="feature-text">Add / edit / delete words</div>
+        <div class="feature-sub">WordModal · WordCard expand · ConfirmModal</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">✅</div>
+      <div>
+        <div class="feature-text">Multiple word selection</div>
+        <div class="feature-sub">Bulk delete · selection mode state machine</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">✅</div>
+      <div>
+        <div class="feature-text">Word groups (sub-lists)</div>
+        <div class="feature-sub">Many-to-many · GroupsPage · GroupPage</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">✅</div>
+      <div>
+        <div class="feature-text">Unified warm design system</div>
+        <div class="feature-sub">Coral #D85A30 · #FDF8F3 bg · all pages</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">✅</div>
+      <div>
+        <div class="feature-text">Branding (Dhad Notes)</div>
+        <div class="feature-sub">PWA manifest · OG tags · animated title</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">🟡</div>
+      <div>
+        <div class="feature-text">Deployment</div>
+        <div class="feature-sub">Vercel + Render + PostgreSQL</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">🟡</div>
+      <div>
+        <div class="feature-text">Search & filter words</div>
+        <div class="feature-sub">By arabic / hebrew / description</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">🟡</div>
+      <div>
+        <div class="feature-text">Practice / quiz mode</div>
+        <div class="feature-sub">Flashcard arabic→hebrew, session tracking</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">🟡</div>
+      <div>
+        <div class="feature-text">Merge word groups</div>
+        <div class="feature-sub">Select multiple groups → merge modal</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">🐛</div>
+      <div>
+        <div class="feature-text">Safari / iPhone layout bug</div>
+        <div class="feature-sub">Overflows on iPhone 15 Pro Safari</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-status">🐛</div>
+      <div>
+        <div class="feature-text">Extra line in app logo</div>
+        <div class="feature-sub">Minor visual artifact</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 9. FILE STRUCTURE ── -->
+<section>
+  <div class="section-label">09 — repository structure</div>
+  <div style="border:0.5px solid var(--border);border-radius:8px;background:var(--bg2);padding:20px 24px;font-family:'SF Mono',monospace;font-size:12px;line-height:2.0">
+    <div style="color:var(--muted)">practice-arabic-app/</div>
+    <div style="padding-left:20px">├── <span style="color:var(--blue)">backend/</span></div>
+    <div style="padding-left:40px;color:var(--muted)">├── <span style="color:var(--text)">main.py</span> <span style="color:var(--muted);font-size:10px">// all routes + get_current_user() dependency</span></div>
+    <div style="padding-left:40px;color:var(--muted)">├── <span style="color:var(--text)">models.py</span> <span style="color:var(--muted);font-size:10px">// SQLAlchemy: User, Word, SubList, SubListWord</span></div>
+    <div style="padding-left:40px;color:var(--muted)">├── <span style="color:var(--text)">auth.py</span> <span style="color:var(--muted);font-size:10px">// hash_password(), verify_password(), JWT logic</span></div>
+    <div style="padding-left:40px;color:var(--muted)">├── venv/ <span style="color:var(--muted);font-size:10px">(gitignored)</span></div>
+    <div style="padding-left:40px;color:var(--muted)">├── arabic_app.db <span style="color:var(--muted);font-size:10px">(dev only)</span></div>
+    <div style="padding-left:40px;color:var(--muted)">└── requirements.txt</div>
+    <div style="padding-left:20px">└── <span style="color:var(--coral)">frontend/</span></div>
+    <div style="padding-left:40px;color:var(--muted)">├── <span style="color:var(--text)">src/</span></div>
+    <div style="padding-left:60px;color:var(--muted)">├── <span style="color:var(--text)">api.js</span> <span style="color:var(--muted);font-size:10px">// all fetch() wrappers with Authorization header</span></div>
+    <div style="padding-left:60px;color:var(--muted)">├── <span style="color:var(--text)">main.jsx</span> <span style="color:var(--muted);font-size:10px">// router + PrivateRoute</span></div>
+    <div style="padding-left:60px;color:var(--muted)">├── pages/</div>
+    <div style="padding-left:80px;color:var(--muted)">AuthPage, HomePage, GroupsPage, GroupPage, TermsPage, PrivacyPage</div>
+    <div style="padding-left:60px;color:var(--muted)">└── components/</div>
+    <div style="padding-left:80px;color:var(--muted)">Navbar, WordCard, WordModal, ConfirmModal, GroupModal</div>
+    <div style="padding-left:40px;color:var(--muted)">├── <span style="color:var(--text)">vite.config.js</span> <span style="color:var(--muted);font-size:10px">// proxy /api → :8000</span></div>
+    <div style="padding-left:40px;color:var(--muted)">└── public/ <span style="color:var(--muted);font-size:10px">favicon, icon-192, icon-512, apple-touch-icon, manifest.json</span></div>
+  </div>
+</section>
+
+<footer style="margin-top:40px;padding-top:20px;border-top:0.5px solid var(--border);font-size:11px;color:var(--muted);font-family:-apple-system,sans-serif;display:flex;justify-content:space-between;align-items:center">
+  <span>💬 Dhad Notes — Engineering Reference</span>
+  <span>Generated from Notion · April 2026</span>
+</footer>
+
+</body>
+</html>
